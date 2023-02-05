@@ -80,9 +80,8 @@ namespace TheGrailLordsOfBretonnia {
             return null
         }
 
-        export class MessageBox {
+        export class MessageBox implements IPopupDialog {
             private static readonly PropagatePriority = 1000
-            private static MessageBoxQueues: MessageBox[] = [] 
 
             readonly identifier = `MessageBox_TheGrailLordsOfBretonnia_${RandomString(5)}`
             private messageBoxComponent : IUIComponent
@@ -106,21 +105,21 @@ namespace TheGrailLordsOfBretonnia {
                 this.Show()
             }
             
-            private Push(): void {
-                MessageBox.MessageBoxQueues.push(this)
+            Push(): void {
+                _TypescriptInternalState.ModalDialogsQueue.push(this)
             }
 
-            private Pop(): void {
-                MessageBox.MessageBoxQueues.shift()
+            Pop(): void {
+                _TypescriptInternalState.ModalDialogsQueue.shift()
             }
 
-            private Top(): MessageBox | null {
-                if(MessageBox.MessageBoxQueues.length == 0) return null
-                return MessageBox.MessageBoxQueues[0]
+            private Top(): IPopupDialog | null {
+                if(_TypescriptInternalState.ModalDialogsQueue.length == 0) return null
+                return _TypescriptInternalState.ModalDialogsQueue[0]
             }
 
-            private Show(): void {
-                if(this != MessageBox.MessageBoxQueues[0]) return
+            Show(): void {
+                if(this != _TypescriptInternalState.ModalDialogsQueue[0]) return
 
                 setTimeout(() => {
                     const bothGroup = Find(this.messageBoxComponent, `both_group`)
