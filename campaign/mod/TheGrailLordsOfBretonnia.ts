@@ -5,7 +5,17 @@ namespace TheGrailLordsOfBretonnia {
     export class YourEntryPoint {
 
         private Init(): void {
-            console.log("Hello world, I'm compiled from Typescript project!");            
+            console.log("Hello world, I'm compiled from Typescript project!")
+            setTimeout(() => {
+                alert(`Hello world`) 
+                confirm("Do you like this mod?", () => {
+                    alert(`thank you`)
+                }, 
+                () => {
+                    alert(`rude`)
+                })
+                alert(`hello again`)
+            }, 3000)
         }
 
         constructor() {
