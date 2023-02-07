@@ -10,27 +10,32 @@ namespace TheGrailLordsOfBretonnia {
             ShieldId: string        
         }
 
+        type CqiToBasicSet = {
+            Cqi: number
+            BasicSet: BasicSet
+        }
+
         const VERSION = 1
         const SAVE_DATA_SLOT = "ADMIRALNELSON_ARMOURY_SYSTEM_DATA"
 
         const logger = new Logger(`Admiralnelson ArmourySystem`)
 
-        const WhitelistedFactions: LuaSet<string> = new LuaSet
-        const WhitelistedSubAgentKeys: LuaSet<string> = new LuaSet
+        const WhitelistedFactions: Set<string> = new Set<string>()
+        const WhitelistedSubAgentKeys: Set<string> = new Set<string>()
 
-        const AnciliaryArmourKeys: LuaSet<string> = new LuaSet
-        const AnciliaryHelmetKeys: LuaSet<string> = new LuaSet
-        const AnciliaryWeaponKeys: LuaSet<string> = new LuaSet
-        const AnciliaryShieldKeys: LuaSet<string> = new LuaSet
+        const AnciliaryArmourKeys: Set<string> = new Set<string>()
+        const AnciliaryHelmetKeys: Set<string> = new Set<string>()
+        const AnciliaryWeaponKeys: Set<string> = new Set<string>()
+        const AnciliaryShieldKeys: Set<string> = new Set<string>()
 
         type ArmourySystemSaveData = {
             Version: number
-            CqiToAssociatedBasicSet: LuaMap<number, BasicSet>
+            CqiToAssociatedBasicSet: CqiToBasicSet[]
         }
 
-        const ThumbnailFilenamesToAssociatedBasicSet: LuaMap<string, BasicSet> = new LuaMap
-        const AnciliaryCompatibilities: LuaMap<string, LuaSet<string>> = new LuaMap
-        const ArmouredCharacters: LuaSet<ArmouredCharacter> = new LuaSet
+        const ThumbnailFilenamesToAssociatedBasicSet: Map<string, BasicSet> = new Map<string, BasicSet>()
+        const AnciliaryCompatibilities: Map<string, Set<string>> = new Map<string, Set<string>>()
+        const ArmouredCharacters: Set<ArmouredCharacter> = new Set<ArmouredCharacter>()
 
         let ArmourySystemData: ArmourySystemSaveData | null = null
 
@@ -40,7 +45,7 @@ namespace TheGrailLordsOfBretonnia {
                 
         export function RegisterSubtypeAgent(agentKey: string) {
             WhitelistedSubAgentKeys.add(agentKey)
-            if(!AnciliaryCompatibilities.has(agentKey)) AnciliaryCompatibilities.set(agentKey, new LuaSet<string>())
+            if(!AnciliaryCompatibilities.has(agentKey)) AnciliaryCompatibilities.set(agentKey, new Set<string>())
         }
 
         export function RegisterThumbnailFilenamesToAssociatedBasicSet(thumbnail: string, basicSet: BasicSet) {
@@ -72,6 +77,34 @@ namespace TheGrailLordsOfBretonnia {
             }, 100);
         }
 
+        function GetBasicSetFromArmourySystemData(character: Character): BasicSet | null {
+            if(ArmourySystemData == null) {
+                logger.LogError(`GetBasicSetFromArmourySystemData: ArmourySystemData was null`)
+                throw(`GetBasicSetFromArmourySystemData failed`)
+            }
+
+            const index = ArmourySystemData.CqiToAssociatedBasicSet.findIndex( armouredCqi => armouredCqi.Cqi == character.CqiNo)
+            if(index >= 0) return ArmourySystemData.CqiToAssociatedBasicSet[index].BasicSet
+            return null
+        }
+
+        function AddCqiToArmourySystemData(character: ArmouredCharacter, basicSet: BasicSet) {
+            if(ArmourySystemData == null) {
+                logger.LogError(`AddCqiToArmourySystemData: ArmourySystemData was null`)
+                throw(`AddCqiToArmourySystemData failed`)
+            }
+
+            const index = ArmourySystemData.CqiToAssociatedBasicSet.findIndex( armouredCqi => armouredCqi.Cqi == character.CqiNo)
+            if(index >= 0) {
+                ArmourySystemData.CqiToAssociatedBasicSet[index].BasicSet = basicSet
+            } else {
+                ArmourySystemData.CqiToAssociatedBasicSet.push({
+                    Cqi: character.CqiNo,
+                    BasicSet: basicSet
+                })
+            }
+        }
+
         function Begin() {
             const validate = Validate()
             if(!validate[0]) {
@@ -92,22 +125,22 @@ namespace TheGrailLordsOfBretonnia {
                 return true   
             } catch (error) {
                 alert(`Failed to initialise the armoury system!\nYour campaign is probably toased. Please see the console log!\nReason: ${error}`)
+                logger.LogError(error as string)
             }
 
             return false
         }
 
         function Validate(): [isOK: boolean, whatError: string]  {
-            const thumbnailKeys = Array.from(ThumbnailFilenamesToAssociatedBasicSet)
-            if(Array.from(ThumbnailFilenamesToAssociatedBasicSet).length == 0) {
+            if(ThumbnailFilenamesToAssociatedBasicSet.size == 0) {
                 return [false, "ThumbnailFilenamesToAssociatedBasicSet is empty"]
             }
 
-            if(Array.from(WhitelistedFactions).length == 0) {
+            if(WhitelistedFactions.size == 0) {
                 return [false, "WhitelistedFactions is empty"]
             }
 
-            if(Array.from(WhitelistedSubAgentKeys).length == 0) {
+            if(WhitelistedSubAgentKeys.size == 0) {
                 return [false, "WhitelistedSubAgentKeys is empty"]
             }
 
@@ -124,11 +157,11 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         function InitialiseForTheFirstTime(): boolean {
-            if(!LoadData()) return false
+            if(LoadData()) return false
 
             ArmourySystemData = {
                 Version: VERSION,
-                CqiToAssociatedBasicSet: new LuaMap,
+                CqiToAssociatedBasicSet: [],
             }
             SaveData()
             return true
@@ -140,14 +173,11 @@ namespace TheGrailLordsOfBretonnia {
                 throw(`InitialiseArmourySystemForCharacter failed`)
             }
 
-            const characters = FindAllCharacters().filter( character => ArmourySystemData?.CqiToAssociatedBasicSet.has(character.CqiNo) == true )
+            const characters = FindAllCharacters().filter( character => GetBasicSetFromArmourySystemData(character) == null )
 
             for (const character of characters) {
                 const newArmouredCharacter = new ArmouredCharacter(character)
-                ArmourySystemData.CqiToAssociatedBasicSet.set(
-                    newArmouredCharacter.CqiNo, 
-                    GetCharacterBasicFaceAndArmourSet(newArmouredCharacter)
-                )
+                AddCqiToArmourySystemData(newArmouredCharacter, GetCharacterBasicFaceAndArmourSet(newArmouredCharacter))
             }
             SaveData()
         }
@@ -158,10 +188,10 @@ namespace TheGrailLordsOfBretonnia {
                 throw(`DeserialisedArmouredCharacter failed`)
             }
 
-            for (const [cqi, _] of ArmourySystemData.CqiToAssociatedBasicSet) {
-                const character = FindCharacter(cqi)
+            for (const cqiAndBasicSet of ArmourySystemData.CqiToAssociatedBasicSet) {
+                const character = FindCharacter(cqiAndBasicSet.Cqi)
                 if(character == null) {
-                    logger.LogError(`Found invalid CQI number ${cqi}`)
+                    logger.LogError(`Found invalid CQI number ${cqiAndBasicSet.Cqi}`)
                 } else {
                     ArmouredCharacters.add(new ArmouredCharacter(character))
                 }
@@ -219,9 +249,8 @@ namespace TheGrailLordsOfBretonnia {
 
             //this where all the magic happens
             const thumbnailFileName = character.ThumbnailFileName.toLowerCase()
-            const cqi = character.CqiNo
 
-            let basicSet = ArmourySystemData.CqiToAssociatedBasicSet.get(cqi)
+            let basicSet = GetBasicSetFromArmourySystemData(character)
             if(basicSet == null) {
                 const originalBasicSet = ThumbnailFilenamesToAssociatedBasicSet.get(thumbnailFileName)
 
@@ -231,7 +260,6 @@ namespace TheGrailLordsOfBretonnia {
                 }
 
                 basicSet = originalBasicSet
-                ArmourySystemData.CqiToAssociatedBasicSet.set(cqi, basicSet)
                 return basicSet
             }
 
@@ -301,7 +329,7 @@ namespace TheGrailLordsOfBretonnia {
                     throw(`getter FaceId failed`)
                 }
     
-                const basicArmour = ArmourySystemData.CqiToAssociatedBasicSet.get(this.CqiNo)
+                const basicArmour = GetBasicSetFromArmourySystemData(this)
                 if(basicArmour == null) {
                     logger.LogError(`FaceId: Armoury system is not applied to this character ${this.CqiNo} ${this.LocalisedFullName}`)
                     throw(`getter FaceId failed`)
@@ -315,7 +343,7 @@ namespace TheGrailLordsOfBretonnia {
                     throw(`getter BasicArmourId failed`)
                 }
     
-                const basicArmour = ArmourySystemData.CqiToAssociatedBasicSet.get(this.CqiNo)
+                const basicArmour = GetBasicSetFromArmourySystemData(this)
                 if(basicArmour == null) {
                     logger.LogError(`BasicArmourId: Armoury system is not applied to this character ${this.CqiNo} ${this.LocalisedFullName}`)
                     throw(`getter BasicArmourId failed`)
@@ -329,7 +357,7 @@ namespace TheGrailLordsOfBretonnia {
                     throw(`getter BasicHelmetId failed`)
                 }
     
-                const basicArmour = ArmourySystemData.CqiToAssociatedBasicSet.get(this.CqiNo)
+                const basicArmour = GetBasicSetFromArmourySystemData(this)
                 if(basicArmour == null) {
                     logger.LogError(`BasicHelmetId: Armoury system is not applied to this character ${this.CqiNo} ${this.LocalisedFullName}`)
                     throw(`getter BasicHelmetId failed`)
@@ -343,7 +371,7 @@ namespace TheGrailLordsOfBretonnia {
                     throw(`getter FaceId failed`)
                 }
     
-                const basicArmour = ArmourySystemData.CqiToAssociatedBasicSet.get(this.CqiNo)
+                const basicArmour = GetBasicSetFromArmourySystemData(this)
                 if(basicArmour == null) {
                     logger.LogError(`BasicShieldId: Armoury system is not applied to this character ${this.CqiNo} ${this.LocalisedFullName}`)
                     throw(`getter BasicShieldId failed`)
@@ -357,7 +385,7 @@ namespace TheGrailLordsOfBretonnia {
                     throw(`getter FaceId failed`)
                 }
     
-                const basicArmour = ArmourySystemData.CqiToAssociatedBasicSet.get(this.CqiNo)
+                const basicArmour = GetBasicSetFromArmourySystemData(this)
                 if(basicArmour == null) {
                     logger.LogError(`BasicShieldId: Armoury system is not applied to this character ${this.CqiNo} ${this.LocalisedFullName}`)
                     throw(`getter BasicShieldId failed`)

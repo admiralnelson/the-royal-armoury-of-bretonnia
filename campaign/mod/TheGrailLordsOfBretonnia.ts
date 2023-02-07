@@ -23,6 +23,7 @@ namespace TheGrailLordsOfBretonnia {
                         char = `${char}, ${c.LocalisedFullName}`
                     }
                     alert(char)
+                    ArmourySystem.Initialise()
                 } 
             })
 
@@ -31,7 +32,7 @@ namespace TheGrailLordsOfBretonnia {
             ArmourySystem.RegisterThumbnailFilenamesToAssociatedBasicSet(
                 "ui/portraits/portholes/admiralnelson/bret_lord_massif_5.png", 
                 ARMOURY_DATA["ui/portraits/portholes/admiralnelson/bret_lord_massif_5.png"])
-            ArmourySystem.Initialise()
+
 
         }
 
