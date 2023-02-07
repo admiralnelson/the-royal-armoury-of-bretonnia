@@ -27,13 +27,6 @@ namespace TheGrailLordsOfBretonnia {
                 } 
             })
 
-            ArmourySystem.RegisterFaction("wh_main_brt_bretonnia")
-            ArmourySystem.RegisterSubtypeAgent("admiralnelson_bret_lord_massif_sword_shield_agent_key")
-            ArmourySystem.RegisterThumbnailFilenamesToAssociatedBasicSet(
-                "ui/portraits/portholes/admiralnelson/bret_lord_massif_5.png", 
-                ARMOURY_DATA["ui/portraits/portholes/admiralnelson/bret_lord_massif_5.png"])
-
-
         }
 
         constructor() {

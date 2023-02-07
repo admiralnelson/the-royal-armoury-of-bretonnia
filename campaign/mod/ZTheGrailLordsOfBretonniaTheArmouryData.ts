@@ -4,7 +4,7 @@ namespace TheGrailLordsOfBretonnia {
         [thumbnailFile: string]: ArmourySystem.BasicSet
     }
 
-    export const ARMOURY_DATA = {
+    const ARMOURY_DATA: ThumbnailFilenameToBasicSet = {
         ["ui/portraits/portholes/admiralnelson/bret_lord_massif_5.png"] : {
             FaceId: "admiralnelson_face_5",
             HelmetId: "hair_5",
@@ -12,6 +12,12 @@ namespace TheGrailLordsOfBretonnia {
             WeaponId: "basic_1hsword_5",
             ShieldId: "basic_shield_5"
         }
+    }
+
+    ArmourySystem.RegisterFaction("wh_main_brt_bretonnia")
+    ArmourySystem.RegisterSubtypeAgent("admiralnelson_bret_lord_massif_sword_shield_agent_key")
+    for (const [fileName, basicSet] of Object.entries(ARMOURY_DATA)) {
+        ArmourySystem.RegisterThumbnailFilenamesToAssociatedBasicSet(fileName, basicSet)
     }
     
 }
