@@ -188,7 +188,10 @@ namespace TheGrailLordsOfBretonnia {
             const characters = this.factionInterface.character_list()
             for (let i = 0; i < characters.num_items(); i++) {
                 const theCharacter = characters.item_at(i)
-                result.push(new Character({characterObject: theCharacter}))
+                if(cm.char_is_general_with_army(theCharacter))
+                    result.push(new Character({characterObject: theCharacter}))
+                else if(cm.char_is_agent(theCharacter))
+                    result.push(new Character({characterObject: theCharacter}))
             }
             return result
         }
