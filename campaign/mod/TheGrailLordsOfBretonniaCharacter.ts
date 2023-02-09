@@ -549,11 +549,11 @@ namespace TheGrailLordsOfBretonnia {
         /**
          * Remove the specified ancilliary from this character
          * @param anciliaryKey Ancillary key, from the ancillaries table.
-         * @param removeFromFactionPool Removes the ancillary from the character but leaves it in the pool of available ancillaries.
+         * @param putItBackToPool Removes the ancillary from the character but leaves it in the pool of available ancillaries.
          * @param supressEventFeed emoves the ancillary from the character but leaves it in the pool of available ancillaries.
          */
-        public RemoveAnciliary(anciliaryKey: string, removeFromFactionPool: boolean = false, supressEventFeed: boolean = true) {
-            cm.force_remove_ancillary(this.GetInternalInterface(), anciliaryKey, removeFromFactionPool, supressEventFeed)
+        public RemoveAnciliary(anciliaryKey: string, putItBackToPool: boolean = true, supressEventFeed: boolean = true) {
+            cm.force_remove_ancillary(this.GetInternalInterface(), anciliaryKey, putItBackToPool, supressEventFeed)
         }
 
         /** returns the agentsubtype key of this object */
