@@ -14,6 +14,7 @@ namespace TheGrailLordsOfBretonnia {
             Cqi: number
             BasicSet: BasicSet
         }
+        
 
         const VERSION = 1
         const SAVE_DATA_SLOT = "ADMIRALNELSON_ARMOURY_SYSTEM_DATA"
@@ -28,13 +29,17 @@ namespace TheGrailLordsOfBretonnia {
         const AnciliaryWeaponKeys: Set<string> = new Set<string>()
         const AnciliaryShieldKeys: Set<string> = new Set<string>()
 
+        let IsRunning = false
+
+        export const DoNotRemoveItemsWithKeywords: Set<string> = new Set<string>()
+
         type ArmourySystemSaveData = {
             Version: number
             CqiToAssociatedBasicSet: CqiToBasicSet[]
         }
 
         const ThumbnailFilenamesToAssociatedBasicSet: Map<string, BasicSet> = new Map<string, BasicSet>()
-        const AnciliaryCompatibilities: Map<string, Set<string>> = new Map<string, Set<string>>()
+        const AnciliaryIncompatibilities: Map<string, Set<string>> = new Map<string, Set<string>>()
         const ArmouredCharacters: Set<ArmouredCharacter> = new Set<ArmouredCharacter>()
 
         let ArmourySystemData: ArmourySystemSaveData | null = null
@@ -45,12 +50,37 @@ namespace TheGrailLordsOfBretonnia {
                 
         export function RegisterSubtypeAgent(agentKey: string) {
             WhitelistedSubAgentKeys.add(agentKey)
-            if(!AnciliaryCompatibilities.has(agentKey)) AnciliaryCompatibilities.set(agentKey, new Set<string>())
+            if(!AnciliaryIncompatibilities.has(agentKey)) AnciliaryIncompatibilities.set(agentKey, new Set<string>())
         }
 
         export function RegisterThumbnailFilenamesToAssociatedBasicSet(thumbnail: string, basicSet: BasicSet) {
+            if(basicSet.ShieldId == "") basicSet.ShieldId = "NONE"
             ThumbnailFilenamesToAssociatedBasicSet.set(thumbnail.toLowerCase(), basicSet)
             logger.Log(`Registering ${thumbnail} with value of ${JSON.stringify(basicSet)}`)
+        }
+
+        export function RegisterArmour(armourAncilliaryKeys: string[]) {
+            for (const iterator of armourAncilliaryKeys) {
+                AnciliaryArmourKeys.add(iterator)
+            }
+        }
+
+        export function RegisterWeapon(weaponAncilliaryKeys: string[]) {
+            for (const iterator of weaponAncilliaryKeys) {
+                AnciliaryWeaponKeys.add(iterator)
+            }
+        }
+
+        export function RegisterHelmet(helmetAncilliaryKeys: string[]) {
+            for (const iterator of helmetAncilliaryKeys) {
+                AnciliaryHelmetKeys.add(iterator)
+            }
+        }
+
+        export function RegisterShield(shieldAncilliaryKeys: string[]) {
+            for (const iterator of shieldAncilliaryKeys) {
+                AnciliaryShieldKeys.add(iterator)
+            }
         }
 
         export function IsAnciliaryExists(anciliaryKey: string): boolean {
@@ -61,8 +91,8 @@ namespace TheGrailLordsOfBretonnia {
             return armour || helmet || weapon || shield
         }
 
-        export function MakeThisItemCompatibleWithAgent(agentKey: string, anciliaries: string[]) {            
-            const compat = AnciliaryCompatibilities.get(agentKey)
+        export function MakeThisItemIncompatibleWithAgent(agentKey: string, anciliaries: string[]) {            
+            const compat = AnciliaryIncompatibilities.get(agentKey)
             if(compat == null) return
             for (const anciliary of anciliaries) {
                 if(IsAnciliaryExists(anciliary)) compat.add(anciliary)
@@ -72,6 +102,9 @@ namespace TheGrailLordsOfBretonnia {
         }
         
         export function Initialise() {
+            if(IsRunning) return
+
+            IsRunning = true
             setTimeout(() => {
                 Begin()
             }, 100);
@@ -119,9 +152,14 @@ namespace TheGrailLordsOfBretonnia {
             }
 
             try {
+                SetupOnCharacterSpawnApplyArmourSystem()
                 InitialiseArmourySystemForCharacters()
                 DeserialiseArmouredCharacters()
-                ApplyTheAssets()
+                ApplyTheArmours()
+                SetupOnCharacterChangeItem()
+
+                OnTurnEnds()
+                OnAnciliaryGainedByCharacter()
                 return true   
             } catch (error) {
                 alert(`Failed to initialise the armoury system!\nYour campaign is probably toased. Please see the console log!\nReason: ${error}`)
@@ -180,6 +218,7 @@ namespace TheGrailLordsOfBretonnia {
                 AddCqiToArmourySystemData(newArmouredCharacter, GetCharacterBasicFaceAndArmourSet(newArmouredCharacter))
             }
             SaveData()
+            logger.Log(`InitialiseArmourySystemForCharacters OK`)
         }
 
         function DeserialiseArmouredCharacters() {
@@ -196,6 +235,7 @@ namespace TheGrailLordsOfBretonnia {
                     ArmouredCharacters.add(new ArmouredCharacter(character))
                 }
             }
+            logger.Log(`DeserialiseArmouredCharacters OK`)
         }
 
         function LoadData(): boolean {
@@ -266,10 +306,108 @@ namespace TheGrailLordsOfBretonnia {
             return basicSet
         }
 
-        function ApplyTheAssets() {
+        function ApplyTheArmours() {
             for (const armouredCharacter of ArmouredCharacters) {
                 armouredCharacter.WearArmour()
             }
+            logger.Log(`ApplyTheArmours OK`)
+        }
+
+        function SetupOnCharacterSpawnApplyArmourSystem() {
+            core.add_listener(
+                `on character spawn`,
+                "CharacterRecruited",
+                context => {
+                    if(context.character == null) return false
+                    const character = WrapICharacterObjectToCharacter(context.character())
+
+                    return WhitelistedFactions.has(character.FactionKey) && 
+                           WhitelistedSubAgentKeys.has(character.SubtypeKey)                    
+                },
+                context => {
+                    if(context.character == null) return
+                    const character = new ArmouredCharacter(WrapICharacterObjectToCharacter(context.character()))
+                    AddCqiToArmourySystemData(character, GetCharacterBasicFaceAndArmourSet(character))
+                    ArmouredCharacters.add(character)
+                    character.WearArmour()
+                    SaveData()
+                    logger.Log(`Character ${character.LocalisedFullName} ${character.CqiNo} just spawned and we applied armoury system for him`)                    
+                },
+                true
+            )
+            logger.Log(`SetupOnCharacterSpawnApplyArmourSystem OK`)
+        }
+
+        function SetupOnCharacterChangeItem() {
+            core.add_listener(
+                `on item equip by the player`,
+                `ComponentLClickUp`,
+                true,
+                context => {
+                    const selectedButton = context.string
+                    if(selectedButton == null) return
+                    if(!selectedButton.startsWith(`CcoCampaignAncillary`) || 
+                       !selectedButton.startsWith(`CcoAncillariesCategory`)) return
+
+                    const characterPanel = CommonUserInterface.Find(CommonUserInterface.GetRootUI(), `character_details_panel`)
+                    if(characterPanel == null) return
+                    const contextObject = characterPanel.GetContextObject(`CcoCampaignCharacter`)
+                    const characterCqi  = contextObject?.Call(`CQI()`) as number
+                    const armouredCharacter = FindArmouredCharacterByCqi(characterCqi)
+                    if(armouredCharacter == null) return
+
+                    armouredCharacter.WearArmour()
+                },
+                true
+            )
+            logger.Log(`SetupOnCharacterChangeItem ok`)
+        }
+
+        function OnTurnEnds() {
+            core.add_listener(
+                `on turn end to update armour state`,
+                `FactionTurnEnd`,
+                context => {
+                    if(context.faction == null) return false
+                    const faction = context.faction().name()
+                    return WhitelistedFactions.has(faction)
+                },
+                () => {
+                    ApplyTheArmours()
+                },
+                true
+            )
+            logger.Log(`OnTurnEnds OK`)
+        }
+
+        function OnAnciliaryGainedByCharacter() {
+            core.add_listener(
+                `on character gained anciliary to update armour`,
+                `CharacterAncillaryGained`,
+                true,
+                context => {
+                    if(context.character == null) return
+                    const character = FindArmouredCharacter(WrapICharacterObjectToCharacter(context.character()))
+                    if(character == null) return
+
+                    character.WearArmour()
+                },
+                true
+            )
+            logger.Log(`OnAnciliaryGainedByCharacter OK`)
+        }
+
+        function OnCharacterSpawned() {
+
+            logger.Log(`OnCharacterSpawned OK`)
+        }
+
+        function FindArmouredCharacterByCqi(cqi: number): ArmouredCharacter | undefined {
+            if(ArmourySystemData == null) {
+                logger.LogError(`CastToArmouredCharacter: ArmourySystemData is null and not initialised`)
+                throw(`CastToArmouredCharacter failed`)
+            }
+            return Array.from(ArmouredCharacters).find(armouredCharacter => armouredCharacter.CqiNo == cqi)            
         }
 
         function FindArmouredCharacter(character: Character): ArmouredCharacter | undefined {
@@ -308,19 +446,22 @@ namespace TheGrailLordsOfBretonnia {
             return difference[0]
         }
 
-        function IsItemCompatibleWithAgent(agentKey: string, anciliaryKey: string): boolean {
-            const anciliaries = AnciliaryCompatibilities.get(agentKey)
+        function IsItemincompatibleWithAgent(agentKey: string, anciliaryKey: string): boolean {
+            const anciliaries = AnciliaryIncompatibilities.get(agentKey)
             if(anciliaries == null) return false
             const ancillariesArray = Array.from(anciliaries)
             return ancillariesArray.includes(anciliaryKey)
-        }      
-
+        }
 
         class ArmouredCharacter extends Character {
+
+            private DoNotRemoveItemsWithKeywords = ["mount", "warhorse", "hippogrif", "pegasus"]
+
             constructor(character: Character) {
                 super({
                     characterObject: character.GetInternalInterface()
                 })
+                this.DoNotRemoveItemsWithKeywords.concat(Object.values(DoNotRemoveItemsWithKeywords))
             }
     
             get FaceId(): string {
@@ -392,14 +533,27 @@ namespace TheGrailLordsOfBretonnia {
                 }
                 return basicArmour.WeaponId
             }
-    
-            OnChangedItem() {
-                this.WearArmour()
+
+            UnequipIncompatibleItems() {
+                const incompatibleItems = this.AnciliaryKeys.filter( anciliary => 
+                    IsItemincompatibleWithAgent(this.SubtypeKey, anciliary) && 
+                    !this.DoNotRemoveItemsWithKeywords.some( keyword => anciliary.includes(keyword) ) 
+                )
+                for (const incompatibleItem of incompatibleItems) {
+                    this.RemoveAnciliary(incompatibleItem, true, true)
+                }
+                return incompatibleItems
             }
     
-            WearArmour() {
+            WearArmour() {                
+                const incompatibleItems = this.UnequipIncompatibleItems()
+                if(incompatibleItems.length > 0 && this.Faction.IsHuman) {
+                    const sentence = `This item is not compatible with this character: ${incompatibleItems[0]}`
+                    alert(sentence)
+                }
                 const variantMeshId = this.GetVariantMeshId()
                 logger.Log(`this character ${this.CqiNo} ${this.LocalisedFullName} will use ${variantMeshId}`)
+                logger.Log(`this character anciliaries ${JSON.stringify(this.AnciliaryKeys)}`)
                 //this.ChangeModelAppearance(variantMeshId)
                 alert(`this character ${this.CqiNo} ${this.LocalisedFullName} will use ${variantMeshId}`)
             }
@@ -411,7 +565,7 @@ namespace TheGrailLordsOfBretonnia {
                 const weaponId = GetWeaponId(this.AnciliaryKeys) ?? this.BasicWeaponId
                 const shieldId = GetShieldId(this.AnciliaryKeys) ?? this.BasicShieldId
                 
-                return `ArmourySystem_${FaceId}_${helmetId}_${armourId}_${weaponId}_${shieldId}`
+                return `ArmourySystem__${FaceId}__${helmetId}__${armourId}__${weaponId}__${shieldId}`
             }
     
             CanUseShield(): boolean {
