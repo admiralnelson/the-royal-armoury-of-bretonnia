@@ -90,7 +90,7 @@ function GetArmoursAndWeaponsLists() {
     for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(',')
         headers.forEach((header, index) => {
-            if(basicArmourSet[header].includes(values[index])) {
+            if(index > 0 && basicArmourSet[header].includes(values[index])) {
                 throw `${values[index]} should not be put in ListOfArmoursAndWeapons.csv`
             }
             result[header].push(values[index])
@@ -100,24 +100,7 @@ function GetArmoursAndWeaponsLists() {
     return result
 }
 
-function GetFaceToAgentType() {
-    const csv = fs.readFileSync('FaceToAgentType.csv', 'utf-8').replace(/\r/g, "")
-    
-    const lines = csv.split("\n");
-    const headers = lines[0].split(",");
-    let result = {};
-  
-    for (let i = 1; i < lines.length; i++) {
-      const currentLine = lines[i].split(",");
-      let obj = {};
-      for (let j = 0; j < headers.length; j++) {
-        obj[headers[j]] = currentLine[j];
-      }
-      result[currentLine[0]] = obj;
-    }
-  
-    return result;
-}
+//console.log(GetArmoursAndWeaponsLists())
 
 
 function GetFaceToCampaignAnimations() {
@@ -138,12 +121,64 @@ function GetFaceToCampaignAnimations() {
        
     }
     
-    return result; 
+    return result
 }
 
 const ANIMATIONS = GetFaceToCampaignAnimations()
 
+function GetAssetIdToAnciliaryKeys() {
+    const csv = fs.readFileSync('AssetIdsToTheActualAnciliaryKeys.csv', 'utf-8').replace(/\r/g, "")
+    const rows = csv.split("\n")
+    const result = {}
+    
+    for (let i = 1; i < rows.length; i++) {
+        const values = rows[i].split(",")
+        const currentAssetId = values[0]
+        result[currentAssetId] = values[1]
+    }
+    
+    return result
+}
 
+const ASSET_IDS_TO_ANCILIARY_KEYS = GetAssetIdToAnciliaryKeys()
+const ANCILIARY_KEYS = new Set(Object.values(ASSET_IDS_TO_ANCILIARY_KEYS))
+
+function GetFaceIdToIncompatibleAnciliaryKey() {
+    const csv = fs.readFileSync('FaceIdToIncompatibleAnciliaryKey.csv', 'utf-8').replace(/\r/g, "")
+    const rows = csv.split("\n")
+    const result = {}
+    
+    for (let i = 1; i < rows.length; i++) {
+        const values = rows[i].split(",")
+        const currentAssetId = values[0]
+        if(result[currentAssetId] == undefined) {
+            result[currentAssetId] = []
+        }
+        result[currentAssetId].push(values[1])
+    }
+    
+    return result
+}
+
+const INCOMPATIBLE_ANCILIARIES = GetFaceIdToIncompatibleAnciliaryKey()
+
+function GetThumbnailsFromFaceIds() {
+    const data = GetBasicArmourSet()   
+    
+    const rows = data["FaceId"].length
+    const result = {}
+    for (let i = 0; i < rows; i++) {
+        const row = {
+            Thumbnail: data.Thumbnail[i],
+            ThumbnailMask1: data.ThumbnailMask1[i],
+            ThumbnailMask2: data.ThumbnailMask2[i],
+        };
+        result[data.FaceId[i]] = row
+    }
+    return result
+}
+
+const FACE_ID_TO_THUMBNAILS = GetThumbnailsFromFaceIds()
 
 function GenerateBasicArmourySetIds() {
     const data = GetBasicArmourSet()   
@@ -164,15 +199,95 @@ function GenerateBasicArmourySetIds() {
 }
 
 function GenerateCombinations() {
-    const faces = GetBasicArmourSet()["FaceId"]
-    const armours = GetArmoursAndWeaponsLists()
+    const basicSet = GetBasicArmourSet()
+    const armoursAndWeapons = GetArmoursAndWeaponsLists()
+    const basicCombinations = GenerateBasicArmourySetIds()
+
+    const subtypeAgentKeys = armoursAndWeapons.AgentSubType
+    const helmets = armoursAndWeapons.HelmetId.concat(basicSet.HelmetId)
+    const armours = armoursAndWeapons.ArmourId.concat(basicSet.ArmourId)
+    const weapons = armoursAndWeapons.WeaponId.concat(basicSet.WeaponId)
+    const shields = armoursAndWeapons.ShieldId.concat(basicSet.ShieldId)
+
     const result = []
-    for (const face of faces) {
-        for (const helmet of armours["HelmetId"]) {
-            for (const armour of armours["ArmourId"]) {
-                for (const weapon of armours["WeaponId"]) {
-                    for (const shield of armours["ShieldId"]) {
+    for (const face of basicSet.FaceId) {
+        for (const helmet of helmets) {
+            for (const armour of armours) {
+                for (const weapon of weapons) {
+                    for (const shield of shields) {
+                        const index = basicSet.FaceId.indexOf(face)
+                        const agentType2 = basicSet.AgentSubType[index]
+                        if(armoursAndWeapons.HelmetId.indexOf(helmet) >= 0) {
+                            const index2 = armoursAndWeapons.HelmetId.indexOf(helmet)
+                            const agentType = subtypeAgentKeys[index2]
+                            if(agentType != agentType2) continue
+                        }
+                        if(armoursAndWeapons.ArmourId.indexOf(armour) >= 0) {
+                            const index2 = armoursAndWeapons.ArmourId.indexOf(armour)
+                            const agentType = subtypeAgentKeys[index2]
+                            if(agentType != agentType2) continue
+                        }
+                        if(armoursAndWeapons.WeaponId.indexOf(weapon) >= 0) {
+                            const index2 = armoursAndWeapons.WeaponId.indexOf(weapon)
+                            const agentType = subtypeAgentKeys[index2]
+                            if(agentType != agentType2) continue
+                        }
+                        if(armoursAndWeapons.ShieldId.indexOf(shield) >= 0) {
+                            const index2 = armoursAndWeapons.ShieldId.indexOf(shield)
+                            const agentType = subtypeAgentKeys[index2]
+                            if(agentType != agentType2) continue
+                        }
+                        if(basicSet.HelmetId.indexOf(helmet) >= 0) {
+                            const index2 = basicSet.HelmetId.indexOf(helmet)
+                            const agentType = basicSet.AgentSubType[index2]
+                            if(agentType != agentType2) continue
+                        }
+                        if(basicSet.ArmourId.indexOf(armour) >= 0) {
+                            const index2 = basicSet.ArmourId.indexOf(armour)
+                            const agentType = basicSet.AgentSubType[index2]
+                            if(agentType != agentType2) continue
+                        }
+                        if(basicSet.WeaponId.indexOf(weapon) >= 0) {
+                            const index2 = basicSet.WeaponId.indexOf(weapon)
+                            const agentType = basicSet.AgentSubType[index2]
+                            if(agentType != agentType2) continue
+                        }
+                        if(basicSet.ShieldId.indexOf(shield) >= 0) {
+                            const index2 = basicSet.ShieldId.indexOf(shield)
+                            const agentType = basicSet.AgentSubType[index2]
+                            if(agentType != agentType2) continue
+                        }
+                        const faceIndex = basicSet.FaceId.indexOf(face)
+                        const helmetIndex = basicSet.HelmetId.indexOf(helmet)
+                        if(faceIndex >=0 && helmetIndex >= 0) {
+                            if(faceIndex != helmetIndex) continue
+                        }
+
+                        //a bit of optimisation
+                        //don't use other basic armour (maybe I'll enable this in the future))
+                        const armourIndex = basicSet.ArmourId.indexOf(armour)
+                        if(faceIndex >=0 && armourIndex >= 0) {
+                            if(faceIndex != armourIndex) continue
+                        }
+
+                        //a bit of optimisation
+                        //don't use other basic weapon (maybe I'll enable this in the future))
+                        const weaponIndex = basicSet.WeaponId.indexOf(weapon)
+                        if(faceIndex >=0 && armourIndex >= 0) {
+                            if(faceIndex != weaponIndex) continue
+                        }
+
+                        //a bit of optimisation
+                        //don't use other basic shield (maybe I'll enable this in the future))
+                        const shieldIndex = basicSet.ShieldId.indexOf(shield)
+                        if(faceIndex >=0 && shieldIndex >= 0) {
+                            if(faceIndex != shieldIndex) continue
+                        }
+
+
                         const x = `ArmourySystem__${face}__${helmet}__${armour}__${weapon}__${shield}`
+                        if(basicCombinations.indexOf(x) >= 0) continue
+                        if(result.indexOf(x) >= 0) continue
                         result.push(x)
                     }
                 }
@@ -183,13 +298,21 @@ function GenerateCombinations() {
     return result
 }
 
-function GenerateXMLFromIds(xmlname, basicIds, combinationsIds) {
+function GenerateXMLFromIds(xmlname) {
+    const basicIds = GenerateBasicArmourySetIds()
+    const combinationsIds = GenerateCombinations()
+
     console.log(`Generating thumbnails xml...`)
     //generate thumbnails with basic armour
     let entries = `
     <!-- BASIC THUMBNAILS STARTS HERE -->
     `
     for (const id of basicIds) {
+        const faceId = id.split("__")[1]
+        const thumbnail = FACE_ID_TO_THUMBNAILS[faceId]
+        if(thumbnail == undefined) {
+            throw `this faceid ${faceId} has no thumbnail!`
+        }
         const entry = `
         <Entry id="${id}">
             <CameraSettings>
@@ -206,9 +329,9 @@ function GenerateXMLFromIds(xmlname, basicIds, combinationsIds) {
             </CameraSettings>
         <Variants>
 			<Variant id="${id}">
-                <FileDiffuse>UI/Portraits/Portholes/ArmourySystem/${id}.png</FileDiffuse>
-                <FileMask1>UI/Portraits/Portholes/ArmourySystem/${id}_mask1.png</FileMask1> <!--All three masks are optional-->
-                <FileMask2>UI/Portraits/Portholes/ArmourySystem/${id}_mask2.png</FileMask2>	<!--All three masks are optional-->
+                <FileDiffuse>${thumbnail.Thumbnail}</FileDiffuse>
+                <FileMask1>${thumbnail.ThumbnailMask1 ?? ""}</FileMask1> <!--All three masks are optional-->
+                <FileMask2>${thumbnail.ThumbnailMask2 ?? ""}</FileMask2>	<!--All three masks are optional-->
                 <FileMask3></FileMask3>	<!--All three masks are optional-->
             </Variant>
         </Variants>
@@ -223,6 +346,11 @@ function GenerateXMLFromIds(xmlname, basicIds, combinationsIds) {
     for (const combinationId of combinationsIds) {
         const faceId = combinationId.split("__").slice(0, 2).join("__")
         const basicId = basicIds.find( id => id.includes(faceId) )
+        const faceIdOnly = combinationId.split("__")[1]
+        const thumbnail = FACE_ID_TO_THUMBNAILS[faceIdOnly]
+        if(thumbnail == undefined) {
+            throw `this faceid ${faceIdOnly} has no thumbnail!`
+        }
         const entry = `
         <Entry id="${combinationId}">
             <CameraSettings>
@@ -239,9 +367,9 @@ function GenerateXMLFromIds(xmlname, basicIds, combinationsIds) {
             </CameraSettings>
         <Variants>
 			<Variant id="${combinationId}">
-                <FileDiffuse>UI/Portraits/Portholes/ArmourySystem/${basicId}.png</FileDiffuse>
-                <FileMask1>UI/Portraits/Portholes/ArmourySystem/${basicId}_mask1.png</FileMask1> <!--All three masks are optional-->
-                <FileMask2>UI/Portraits/Portholes/ArmourySystem/${basicId}_mask2.png</FileMask2>	<!--All three masks are optional-->
+                <FileDiffuse>${thumbnail.Thumbnail}</FileDiffuse>
+                <FileMask1>${thumbnail.ThumbnailMask1 ?? ""}</FileMask1> <!--All three masks are optional-->
+                <FileMask2>${thumbnail.ThumbnailMask2 ?? ""}</FileMask2>	<!--All three masks are optional-->
                 <FileMask3></FileMask3>	<!--All three masks are optional-->
             </Variant>
         </Variants>
@@ -262,7 +390,11 @@ function GenerateXMLFromIds(xmlname, basicIds, combinationsIds) {
 }
 
 //campaign_character_art_sets_tables
-function GenerateCampaignCharacterArtSetsTables(tableName, faceToAgentTypes, basicIds, combinationsIds) {
+function GenerateCampaignCharacterArtSetsTables(tableName) {
+    const basicArmourSet =  GetBasicArmourSet()
+    const basicIds = GenerateBasicArmourySetIds()
+    const combinationsIds = GenerateCombinations()
+
     console.log(`Generating campaign_character_art_sets_tables`)
 
     let   header = `art_set_id	agent_type	culture	subculture	faction	is_custom	is_male	agent_subtype	campaign_map_scale\n`
@@ -273,7 +405,8 @@ function GenerateCampaignCharacterArtSetsTables(tableName, faceToAgentTypes, bas
     let entries = ``
     for (const basicId of basicIds) {
         const faceId = basicId.split("__")[1]
-        const lordCultureData = faceToAgentTypes[faceId]
+        const index = basicArmourSet.FaceId.indexOf(faceId)
+        const lordCultureData = basicArmourSet.Culture[index]
         const entry = `${basicId}\t${lordCultureData["AgentType"]}\t${lordCultureData["Culture"]}\t\t\tfalse\ttrue\t${lordCultureData["AgentSubType"]}\t1.000\n`
         entries += entry
     }
@@ -281,7 +414,8 @@ function GenerateCampaignCharacterArtSetsTables(tableName, faceToAgentTypes, bas
     //customisable armours db entries
     for (const combinationId of combinationsIds) {
         const faceId = combinationId.split("__")[1]
-        const lordCultureData = faceToAgentTypes[faceId]
+        const index = basicArmourSet.FaceId.indexOf(faceId)
+        const lordCultureData = basicArmourSet.Culture[index]
         const entry = `${combinationId}\t${lordCultureData["AgentType"]}\t${lordCultureData["Culture"]}\t\t\tfalse\ttrue\t${lordCultureData["AgentSubType"]}\t1.000\n`
         entries += entry
     }
@@ -290,7 +424,10 @@ function GenerateCampaignCharacterArtSetsTables(tableName, faceToAgentTypes, bas
     fs.writeFileSync(`autogenerated/db/campaign_character_art_sets_tables/@@@autogenerated_${tableName}.tsv`, tsv)
 }
 
-function GenerateUniforms(tableName, basicIds, combinationsIds) {
+function GenerateUniforms(tableName) {
+    const basicIds = GenerateBasicArmourySetIds()
+    const combinationsIds = GenerateCombinations()
+
     console.log(`Generating agent_uniforms_tables`)
 
     let header = `uniform_name	filename	battle_filename	campaign_porthole_filename	campaign_politician_filename	campaign_override_skeleton\n`
@@ -306,8 +443,11 @@ function GenerateUniforms(tableName, basicIds, combinationsIds) {
     fs.writeFileSync(`autogenerated/db/agent_uniforms_tables/@@@autogenerated_${tableName}.tsv`, tsv)
 }
 
-function GenerateVariantTables(tableName, scale, mountScale, basicIds, combinationsIds) {
+function GenerateVariantTables(tableName, scale, mountScale) {
     console.log(`Generating variants_tables`)
+
+    const basicIds = GenerateBasicArmourySetIds()
+    const combinationsIds = GenerateCombinations()
 
     let header = `variant_name	tech_folder	variant_filename	low_poly_filename	mount_scale	scale	scale_variation	super_low_poly_filename\n`
        header += `#variants_tables;6;db/variants_tables/@@@autogenerated_${tableName}							`
@@ -322,8 +462,11 @@ function GenerateVariantTables(tableName, scale, mountScale, basicIds, combinati
     fs.writeFileSync(`autogenerated/db/variants_tables/@@@autogenerated_${tableName}.tsv`, tsv)
 }
 
-function GenerateCampaignCharacterArtsTables(tableName, seedNumber,basicIds, combinationsIds) {
+function GenerateCampaignCharacterArtsTables(tableName, seedNumber) {
     console.log(`Generating campaign_character_arts_tables`)
+
+    const basicIds = GenerateBasicArmourySetIds()
+    const combinationsIds = GenerateCombinations()
 
     let header = `id	art_set_id	level	age	portrait	season	uniform	card	info	sea_uniform	navy_uniform	land_animation	sea_animation	navy_animation	land_animation_vfx_filter	sea_animation_vfx_filter	navy_animation_vfx_filter\n`
         header += `#campaign_character_arts_tables;0;db/campaign_character_arts_tables/@@@autogenerated_${tableName}																`
@@ -360,7 +503,10 @@ function GenerateCampaignCharacterArtsTables(tableName, seedNumber,basicIds, com
     fs.writeFileSync(`autogenerated/db/campaign_character_arts_tables/@@@autogenerated_${tableName}.tsv`, tsv)
 }
 
-function GenerateVariantMeshDefinitions(basicIds, combinationsIds) {
+function GenerateVariantMeshDefinitions() {
+    const basicIds = GenerateBasicArmourySetIds()
+    const combinationsIds = GenerateCombinations()
+
     console.log(`Generating Variantmesh definitions...`)
     const ids = basicIds.concat(combinationsIds)
     for (const id of ids) {
@@ -420,13 +566,156 @@ function GenerateVariantMeshDefinitions(basicIds, combinationsIds) {
     }
 }
 
+function GenerateTypescriptArmouryData(projectName, factions, agentSubtypes, listOfArmoursAndWeapons) {
+
+    function ArmoryData() {
+        const armourset = GetBasicArmourSet()
+        const rows = armourset["FaceId"].length
+        let generatedBasicSet = ``
+        for (let i = 0; i < rows; i++) {
+            const row = rows[i]
+            const template = `
+            ["${row.Thumbnail}"] : {
+                FaceId: "${rowFaceId}",
+                HelmetId: "${row.HelmetId}",
+                ArmourId: "${row.ArmourId}",
+                WeaponId: "${row.WeaponId}",
+                ShieldId: "${row.ShieldId}"
+            },`
+            generatedBasicSet += template
+        }
+
+        return generatedBasicSet
+    }
+
+    function Factions() {
+        return `[${factions.join(",")}]`
+    }
+
+    function AgentSubTypes() {
+        let result = new Set()
+        for (const [faceId, agentSubtype] of agentSubtypes) {
+            result.add(agentSubtype.AgentSubType)
+        }
+        return `[${Array.from(result.values()).join(",")}]`
+    }
+
+    function RegisteredArmours() {
+        const armours = listOfArmoursAndWeapons.ArmourId
+        let entries = ``
+        for (const armour of armours) {
+            const index = listOfArmoursAndWeapons.ArmourId.indexOf(armour)
+            const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[armour]
+            const entry = `{
+    anciliaryKey: "${anciliaryKey}",
+    subtypeAgentKey: "${listOfArmoursAndWeapons.AgentSubType[index]}",
+    assetId: "${armour}"
+},`
+            entries += entry
+        }
+
+        return entries
+    }
+
+    function RegisteredHelmets() {
+        const helmets = listOfArmoursAndWeapons.HelmetId
+        let entries = ``
+        for (const helmet of helmets) {
+            const index = listOfArmoursAndWeapons.HelmetId.indexOf(helmet)
+            const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[helmet]
+            const entry = `{
+    anciliaryKey: "${anciliaryKey}",
+    subtypeAgentKey: "${listOfArmoursAndWeapons.AgentSubType[index]}",
+    assetId: "${helmet}"
+},`
+            entries += entry
+        }
+
+        return entries
+    }
+
+    function RegisteredWeapons() {
+        const weapons = listOfArmoursAndWeapons.WeaponId
+        let entries = ``
+        for (const weapon of weapons) {
+            const index = listOfArmoursAndWeapons.WeaponId.indexOf(weapon)
+            const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[weapon]
+            const entry = `{
+    anciliaryKey: "${anciliaryKey}",
+    subtypeAgentKey: "${listOfArmoursAndWeapons.AgentSubType[index]}",
+    assetId: "${weapon}"
+},`
+            entries += entry
+        }
+
+        return entries
+    }
+
+    function RegisteredShields() {
+        const shields = listOfArmoursAndWeapons.ShieldId
+        let entries = ``
+        for (const shield of shields) {
+            const index = listOfArmoursAndWeapons.ShieldId.indexOf(shield)
+            const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[shield]
+            const entry = `{
+    anciliaryKey: "${anciliaryKey}",
+    subtypeAgentKey: "${listOfArmoursAndWeapons.AgentSubType[index]}",
+    assetId: "${shield}"
+},`
+            entries += entry
+        }
+
+        return entries
+    }
+
+    const generatedBasicSet = ArmoryData()
+    const generatedFactions = Factions()
+    const generatedSubtypes = AgentSubTypes()
+    const generatedArmours = RegisteredArmours()
+    const generatedHelmets = RegisteredHelmets()
+    const generatedWeapons = RegisteredWeapons()
+    const generatedShields = RegisteredShields()
+    const source = `
+namespace ${projectName} {
+
+    type ThumbnailFilenameToBasicSet = {
+        [thumbnailFile: string]: ArmourySystem.BasicSet
+    }
+
+    const ARMOURY_DATA: ThumbnailFilenameToBasicSet = {
+        ${generatedBasicSet}
+    }
+
+    ArmourySystem.RegisterFaction(${generatedFactions})
+    ArmourySystem.RegisterSubtypeAgent(${generatedSubtypes})
+    for (const [fileName, basicSet] of Object.entries(ARMOURY_DATA)) {
+        ArmourySystem.RegisterThumbnailFilenamesToAssociatedBasicSet(fileName, basicSet)
+    }
+    ArmourySystem.RegisterArmour([
+        ${generatedArmours}
+    ])
+    ArmourySystem.RegisterHelmet([
+        ${generatedHelmets}
+    ])
+    ArmourySystem.RegisterWeapon([
+        ${generatedWeapons}
+    ])
+    ArmourySystem.RegisterShield([
+        ${generatedShields}
+    ])
+    ArmourySystem.MakeThisItemIncompatibleWithAgent("admiralnelson_bret_lord_massif_sword_shield_agent_key", ["wh_main_anc_armour_gamblers_armour"])
+    
+}
+`
+}
+
 const SEED_NUMBER = 0x5EEDFEED
 const LORD_SCALE = 1.2
 const MOUNT_SCALE = 1.1
 InitFolders()
-GenerateXMLFromIds("bretonnia_royal_armoury", GenerateBasicArmourySetIds(), GenerateCombinations())
-GenerateCampaignCharacterArtSetsTables("bretonnia_royal_armoury", GetFaceToAgentType(), GenerateBasicArmourySetIds(), GenerateCombinations())
-GenerateUniforms("bretonnia_royal_armoury", GenerateBasicArmourySetIds(), GenerateCombinations())
-GenerateCampaignCharacterArtsTables("bretonnia_royal_armory", SEED_NUMBER, GenerateBasicArmourySetIds(), GenerateCombinations())
-GenerateVariantTables("bretonnia_royal_armoury", LORD_SCALE, MOUNT_SCALE, GenerateBasicArmourySetIds(), GenerateCombinations())
-GenerateVariantMeshDefinitions(GenerateBasicArmourySetIds(), GenerateCombinations())
+GenerateXMLFromIds("bretonnia_royal_armoury")
+GenerateCampaignCharacterArtSetsTables("bretonnia_royal_armoury")
+GenerateUniforms("bretonnia_royal_armoury")
+GenerateCampaignCharacterArtsTables("bretonnia_royal_armory", SEED_NUMBER)
+GenerateVariantTables("bretonnia_royal_armoury", LORD_SCALE, MOUNT_SCALE)
+GenerateVariantMeshDefinitions()
