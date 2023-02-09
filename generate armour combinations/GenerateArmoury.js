@@ -74,33 +74,7 @@ function GetBasicArmourSet() {
 
 }
 
-function GetArmoursAndWeaponsLists() {
-    const basicArmourSet = GetBasicArmourSet()
-
-    const csv = fs.readFileSync('ListOfArmoursAndWeapons.csv', 'utf-8').replace(/\r/g, "")
-    
-    const lines = csv.split('\n')
-    const headers = lines[0].split(',')
-
-    const result = {};
-    headers.forEach(header => {
-        result[header] = []
-    })
-
-    for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',')
-        headers.forEach((header, index) => {
-            if(index > 0 && basicArmourSet[header].includes(values[index])) {
-                throw `${values[index]} should not be put in ListOfArmoursAndWeapons.csv`
-            }
-            result[header].push(values[index])
-        })
-    }
-
-    return result
-}
-
-//console.log(GetArmoursAndWeaponsLists())
+//console.lo(gGetArmoursAndWeaponsLists())
 
 
 function GetFaceToCampaignAnimations() {
@@ -180,6 +154,110 @@ function GetThumbnailsFromFaceIds() {
 
 const FACE_ID_TO_THUMBNAILS = GetThumbnailsFromFaceIds()
 
+function GetArmours() {
+    const basicArmourSet = GetBasicArmourSet()
+
+    const csv = fs.readFileSync('ListOfArmours.csv', 'utf-8').replace(/\r/g, "")
+    
+    const lines = csv.split('\n')
+    const headers = lines[0].split(',')
+
+    const result = {};
+    headers.forEach(header => {
+        result[header] = []
+    })
+
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',')
+        headers.forEach((header, index) => {
+            if(index > 0 && basicArmourSet[header].includes(values[index])) {
+                throw `${values[index]} should not be put in ListOfArmours.csv`
+            }
+            result[header].push(values[index])
+        })
+    }
+
+    return result
+}
+
+function GetHelmets() {
+    const basicArmourSet = GetBasicArmourSet()
+
+    const csv = fs.readFileSync('ListOfHelmets.csv', 'utf-8').replace(/\r/g, "")
+    
+    const lines = csv.split('\n')
+    const headers = lines[0].split(',')
+
+    const result = {};
+    headers.forEach(header => {
+        result[header] = []
+    })
+
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',')
+        headers.forEach((header, index) => {
+            if(index > 0 && basicArmourSet[header].includes(values[index])) {
+                throw `${values[index]} should not be put in ListOfHelmets.csv`
+            }
+            result[header].push(values[index])
+        })
+    }
+
+    return result
+}
+
+function GetWeapons() {
+    const basicArmourSet = GetBasicArmourSet()
+
+    const csv = fs.readFileSync('ListOfWeapons.csv', 'utf-8').replace(/\r/g, "")
+    
+    const lines = csv.split('\n')
+    const headers = lines[0].split(',')
+
+    const result = {};
+    headers.forEach(header => {
+        result[header] = []
+    })
+
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',')
+        headers.forEach((header, index) => {
+            if(index > 0 && basicArmourSet[header].includes(values[index])) {
+                throw `${values[index]} should not be put in ListOfWeapons.csv`
+            }
+            result[header].push(values[index])
+        })
+    }
+
+    return result
+}
+
+function GetShields() {
+    const basicArmourSet = GetBasicArmourSet()
+
+    const csv = fs.readFileSync('ListOfShields.csv', 'utf-8').replace(/\r/g, "")
+    
+    const lines = csv.split('\n')
+    const headers = lines[0].split(',')
+
+    const result = {};
+    headers.forEach(header => {
+        result[header] = []
+    })
+
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',')
+        headers.forEach((header, index) => {
+            if(index > 0 && basicArmourSet[header].includes(values[index])) {
+                throw `${values[index]} should not be put in ListOfShields.csv`
+            }
+            result[header].push(values[index])
+        })
+    }
+
+    return result
+}
+
 function GenerateBasicArmourySetIds() {
     const data = GetBasicArmourSet()   
     
@@ -200,14 +278,17 @@ function GenerateBasicArmourySetIds() {
 
 function GenerateCombinations() {
     const basicSet = GetBasicArmourSet()
-    const armoursAndWeapons = GetArmoursAndWeaponsLists()
     const basicCombinations = GenerateBasicArmourySetIds()
 
-    const subtypeAgentKeys = armoursAndWeapons.AgentSubType
-    const helmets = armoursAndWeapons.HelmetId.concat(basicSet.HelmetId)
-    const armours = armoursAndWeapons.ArmourId.concat(basicSet.ArmourId)
-    const weapons = armoursAndWeapons.WeaponId.concat(basicSet.WeaponId)
-    const shields = armoursAndWeapons.ShieldId.concat(basicSet.ShieldId)
+    const helmets = GetHelmets().HelmetId.concat(basicSet.HelmetId)
+    const armours = GetArmours().ArmourId.concat(basicSet.ArmourId)
+    const weapons = GetWeapons().WeaponId.concat(basicSet.WeaponId)
+    const shields = GetShields().ShieldId.concat(basicSet.ShieldId)
+
+    const helmetsAgents = GetHelmets()
+    const armoursAgents = GetArmours()
+    const weaponsAgents = GetWeapons()
+    const shieldsAgents = GetShields()
 
     const result = []
     for (const face of basicSet.FaceId) {
@@ -215,52 +296,37 @@ function GenerateCombinations() {
             for (const armour of armours) {
                 for (const weapon of weapons) {
                     for (const shield of shields) {
-                        const index = basicSet.FaceId.indexOf(face)
-                        const agentType2 = basicSet.AgentSubType[index]
-                        if(armoursAndWeapons.HelmetId.indexOf(helmet) >= 0) {
-                            const index2 = armoursAndWeapons.HelmetId.indexOf(helmet)
-                            const agentType = subtypeAgentKeys[index2]
-                            if(agentType != agentType2) continue
-                        }
-                        if(armoursAndWeapons.ArmourId.indexOf(armour) >= 0) {
-                            const index2 = armoursAndWeapons.ArmourId.indexOf(armour)
-                            const agentType = subtypeAgentKeys[index2]
-                            if(agentType != agentType2) continue
-                        }
-                        if(armoursAndWeapons.WeaponId.indexOf(weapon) >= 0) {
-                            const index2 = armoursAndWeapons.WeaponId.indexOf(weapon)
-                            const agentType = subtypeAgentKeys[index2]
-                            if(agentType != agentType2) continue
-                        }
-                        if(armoursAndWeapons.ShieldId.indexOf(shield) >= 0) {
-                            const index2 = armoursAndWeapons.ShieldId.indexOf(shield)
-                            const agentType = subtypeAgentKeys[index2]
-                            if(agentType != agentType2) continue
-                        }
-                        if(basicSet.HelmetId.indexOf(helmet) >= 0) {
-                            const index2 = basicSet.HelmetId.indexOf(helmet)
-                            const agentType = basicSet.AgentSubType[index2]
-                            if(agentType != agentType2) continue
-                        }
-                        if(basicSet.ArmourId.indexOf(armour) >= 0) {
-                            const index2 = basicSet.ArmourId.indexOf(armour)
-                            const agentType = basicSet.AgentSubType[index2]
-                            if(agentType != agentType2) continue
-                        }
-                        if(basicSet.WeaponId.indexOf(weapon) >= 0) {
-                            const index2 = basicSet.WeaponId.indexOf(weapon)
-                            const agentType = basicSet.AgentSubType[index2]
-                            if(agentType != agentType2) continue
-                        }
-                        if(basicSet.ShieldId.indexOf(shield) >= 0) {
-                            const index2 = basicSet.ShieldId.indexOf(shield)
-                            const agentType = basicSet.AgentSubType[index2]
-                            if(agentType != agentType2) continue
-                        }
                         const faceIndex = basicSet.FaceId.indexOf(face)
-                        const helmetIndex = basicSet.HelmetId.indexOf(helmet)
-                        if(faceIndex >=0 && helmetIndex >= 0) {
-                            if(faceIndex != helmetIndex) continue
+                        const agentType = basicSet.AgentSubType[faceIndex]
+
+                        if(helmetsAgents.HelmetId.indexOf(helmet) >= 0) {
+                            const index = helmetsAgents.HelmetId.indexOf(helmet)
+                            const agent = helmetsAgents.AgentSubType[index]
+                            if(agentType != agent) continue
+                        }
+
+                        if(armoursAgents.ArmourId.indexOf(armour) >= 0) {
+                            const index = armoursAgents.ArmourId.indexOf(armour)
+                            const agent = armoursAgents.AgentSubType[index]
+                            if(agentType != agent) continue
+                        }
+
+                        if(weaponsAgents.WeaponId.indexOf(weapon) >= 0) {
+                            const index = weaponsAgents.WeaponId.indexOf(weapon)
+                            const agent = weaponsAgents.AgentSubType[index]
+                            if(agentType != agent) continue
+                        }
+
+                        if(shieldsAgents.ShieldId.indexOf(shield) >= 0) {
+                            const index = shieldsAgents.ShieldId.indexOf(shield)
+                            const agent = shieldsAgents.AgentSubType[index]
+                            if(agentType != agent) continue
+                        }
+
+                        //don't use incompatible hair!
+                        const hairIndex = basicSet.HelmetId.indexOf(helmet)
+                        if(faceIndex >=0 && hairIndex >= 0) {
+                            if(faceIndex != hairIndex) continue
                         }
 
                         //a bit of optimisation
@@ -273,7 +339,7 @@ function GenerateCombinations() {
                         //a bit of optimisation
                         //don't use other basic weapon (maybe I'll enable this in the future))
                         const weaponIndex = basicSet.WeaponId.indexOf(weapon)
-                        if(faceIndex >=0 && armourIndex >= 0) {
+                        if(faceIndex >=0 && weaponIndex >= 0) {
                             if(faceIndex != weaponIndex) continue
                         }
 
