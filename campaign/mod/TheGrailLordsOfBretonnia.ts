@@ -50,6 +50,8 @@ namespace TheGrailLordsOfBretonnia {
                 `wh_main_anc_follower_bretonnia_court_jester`,
                 `wh_main_anc_follower_bretonnia_squire`,
                 `wh_main_anc_follower_empire_estalian_diestro`,
+                
+                `admiralnelson_dragon_helmet_anciliary_key`
             ]
 
             for (const item of anciliariesTest) {
@@ -61,17 +63,26 @@ namespace TheGrailLordsOfBretonnia {
                 agentKey: "admiralnelson_bret_lord_massif_sword_shield_agent_key",
                 regionKey: faction.FactionLeader?.CurrentRegionKey,
                 lordCreatedCallback: (lord) => {
-                    alert(`thumbnail path is : ${lord.ThumbnailFileName.toLowerCase()}`)
-                    const fac = GetFactionByKey("wh_main_brt_bretonnia")
-                    if(fac == null) return
+                    // alert(`thumbnail path is : ${lord.ThumbnailFileName.toLowerCase()}`)
+                    // const fac = GetFactionByKey("wh_main_brt_bretonnia")
+                    // if(fac == null) return
 
-                    let char = ""
-                    for (const c of fac.Characters) {
-                        char = `${char}, ${c.LocalisedFullName}`
-                    }
-                    alert(char, () => {
-                        lord.ChangeModelAppearance(`admiralnelson_brt_generic_lord_massif_sword_shield_art_key_1`)
-                    })
+                    // let char = ""
+                    // for (const c of fac.Characters) {
+                    //     char = `${char}, ${c.LocalisedFullName}`
+                    // }
+                    // alert(char, () => {
+                    //     lord.ChangeModelAppearance(`admiralnelson_brt_generic_lord_massif_sword_shield_art_key_1`)
+                    // })
+                } 
+            })
+
+            new Lord({
+                factionKey: "wh_main_brt_bretonnia",
+                agentKey: "admiralnelson_bret_lord_massif_agent_key",
+                regionKey: faction.FactionLeader?.CurrentRegionKey,
+                lordCreatedCallback: (lord) => {
+                    console.log(`ok`)
                 } 
             })
 

@@ -10,11 +10,17 @@ namespace TheGrailLordsOfBretonnia {
             ShieldId: string        
         }
 
+        export type AnciliaryKeyToAssetId = {
+            anciliaryKey: string
+            subtypeAgentKey: string
+            assetId: string
+        }
+
         type CqiToBasicSet = {
             Cqi: number
             BasicSet: BasicSet
         }
-        
+
 
         const VERSION = 1
         const SAVE_DATA_SLOT = "ADMIRALNELSON_ARMOURY_SYSTEM_DATA"
@@ -24,10 +30,10 @@ namespace TheGrailLordsOfBretonnia {
         const WhitelistedFactions: Set<string> = new Set<string>()
         const WhitelistedSubAgentKeys: Set<string> = new Set<string>()
 
-        const AnciliaryArmourKeys: Set<string> = new Set<string>()
-        const AnciliaryHelmetKeys: Set<string> = new Set<string>()
-        const AnciliaryWeaponKeys: Set<string> = new Set<string>()
-        const AnciliaryShieldKeys: Set<string> = new Set<string>()
+        const AnciliaryArmourKeys: Set<AnciliaryKeyToAssetId> = new Set<AnciliaryKeyToAssetId>()
+        const AnciliaryHelmetKeys: Set<AnciliaryKeyToAssetId> = new Set<AnciliaryKeyToAssetId>()
+        const AnciliaryWeaponKeys: Set<AnciliaryKeyToAssetId> = new Set<AnciliaryKeyToAssetId>()
+        const AnciliaryShieldKeys: Set<AnciliaryKeyToAssetId> = new Set<AnciliaryKeyToAssetId>()
 
         let IsRunning = false
 
@@ -44,13 +50,17 @@ namespace TheGrailLordsOfBretonnia {
 
         let ArmourySystemData: ArmourySystemSaveData | null = null
 
-        export function RegisterFaction(factionKey: string) {
-            WhitelistedFactions.add(factionKey)
+        export function RegisterFaction(factionKeys: string[]) {
+            for (const factionKey of factionKeys) {
+                WhitelistedFactions.add(factionKey)
+            }
         }
                 
-        export function RegisterSubtypeAgent(agentKey: string) {
-            WhitelistedSubAgentKeys.add(agentKey)
-            if(!AnciliaryIncompatibilities.has(agentKey)) AnciliaryIncompatibilities.set(agentKey, new Set<string>())
+        export function RegisterSubtypeAgent(agentKeys: string[]) {
+            for (const agentKey of agentKeys) {
+                WhitelistedSubAgentKeys.add(agentKey)
+                if(!AnciliaryIncompatibilities.has(agentKey)) AnciliaryIncompatibilities.set(agentKey, new Set<string>())   
+            }
         }
 
         export function RegisterThumbnailFilenamesToAssociatedBasicSet(thumbnail: string, basicSet: BasicSet) {
@@ -59,43 +69,43 @@ namespace TheGrailLordsOfBretonnia {
             logger.Log(`Registering ${thumbnail} with value of ${JSON.stringify(basicSet)}`)
         }
 
-        export function RegisterArmour(armourAncilliaryKeys: string[]) {
+        export function RegisterArmour(armourAncilliaryKeys: AnciliaryKeyToAssetId[]) {
             for (const iterator of armourAncilliaryKeys) {
                 AnciliaryArmourKeys.add(iterator)
             }
         }
 
-        export function RegisterWeapon(weaponAncilliaryKeys: string[]) {
+        export function RegisterWeapon(weaponAncilliaryKeys: AnciliaryKeyToAssetId[]) {
             for (const iterator of weaponAncilliaryKeys) {
                 AnciliaryWeaponKeys.add(iterator)
             }
         }
 
-        export function RegisterHelmet(helmetAncilliaryKeys: string[]) {
+        export function RegisterHelmet(helmetAncilliaryKeys: AnciliaryKeyToAssetId[]) {
             for (const iterator of helmetAncilliaryKeys) {
                 AnciliaryHelmetKeys.add(iterator)
             }
         }
 
-        export function RegisterShield(shieldAncilliaryKeys: string[]) {
+        export function RegisterShield(shieldAncilliaryKeys: AnciliaryKeyToAssetId[]) {
             for (const iterator of shieldAncilliaryKeys) {
                 AnciliaryShieldKeys.add(iterator)
             }
         }
 
-        export function IsAnciliaryExists(anciliaryKey: string): boolean {
-            const armour = Array.from(AnciliaryArmourKeys).includes(anciliaryKey)
-            const helmet = Array.from(AnciliaryHelmetKeys).includes(anciliaryKey)
-            const weapon = Array.from(AnciliaryWeaponKeys).includes(anciliaryKey)
-            const shield = Array.from(AnciliaryShieldKeys).includes(anciliaryKey)
+        export function IsAnciliaryExists(subagentKey: string, anciliaryKey: string): boolean {
+            const armour = Array.from(AnciliaryArmourKeys).findIndex( anciliary => anciliary.subtypeAgentKey == subagentKey && anciliary.anciliaryKey == anciliaryKey  ) >= 0
+            const helmet = Array.from(AnciliaryHelmetKeys).findIndex( anciliary => anciliary.subtypeAgentKey == subagentKey && anciliary.anciliaryKey == anciliaryKey  ) >= 0
+            const weapon = Array.from(AnciliaryWeaponKeys).findIndex( anciliary => anciliary.subtypeAgentKey == subagentKey && anciliary.anciliaryKey == anciliaryKey  ) >= 0
+            const shield = Array.from(AnciliaryShieldKeys).findIndex( anciliary => anciliary.subtypeAgentKey == subagentKey && anciliary.anciliaryKey == anciliaryKey  ) >= 0
             return armour || helmet || weapon || shield
         }
 
-        export function MakeThisItemIncompatibleWithAgent(agentKey: string, anciliaries: string[]) {            
-            const compat = AnciliaryIncompatibilities.get(agentKey)
+        export function MakeThisItemIncompatibleWithAgent(subagentKey: string, anciliaries: string[]) {            
+            const compat = AnciliaryIncompatibilities.get(subagentKey)
             if(compat == null) return
             for (const anciliary of anciliaries) {
-                if(IsAnciliaryExists(anciliary)) compat.add(anciliary)
+                if(IsAnciliaryExists(subagentKey, anciliary)) compat.add(anciliary)
                 else logger.LogWarn(`anciliary is not registered in the system: ${anciliary}`)
             }             
            
@@ -397,11 +407,6 @@ namespace TheGrailLordsOfBretonnia {
             logger.Log(`OnAnciliaryGainedByCharacter OK`)
         }
 
-        function OnCharacterSpawned() {
-
-            logger.Log(`OnCharacterSpawned OK`)
-        }
-
         function FindArmouredCharacterByCqi(cqi: number): ArmouredCharacter | undefined {
             if(ArmourySystemData == null) {
                 logger.LogError(`CastToArmouredCharacter: ArmourySystemData is null and not initialised`)
@@ -418,32 +423,36 @@ namespace TheGrailLordsOfBretonnia {
             return Array.from(ArmouredCharacters).find(armouredCharacter => armouredCharacter.CqiNo == character.CqiNo)            
         }
 
-        function GetArmourId(anciliariesKeys: string[]): string | null {
+        function GetArmourId(agentSubtype: string, anciliariesKeys: string[]): string | null {
             const knownArmours = Array.from(AnciliaryArmourKeys)
-            const difference = knownArmours.filter(knownArmour => anciliariesKeys.includes(knownArmour))
-            if(difference.length == 0) return null
-            return difference[0]
+            const armourId = knownArmours.find( knownArmour => anciliariesKeys.includes(knownArmour.anciliaryKey) && knownArmour.subtypeAgentKey == agentSubtype )
+            
+            if(!armourId) return null
+            return armourId.assetId
         }
 
-        function GetHelmetId(anciliariesKeys: string[]): string | null {
+        function GetHelmetId(agentSubtype: string, anciliariesKeys: string[]): string | null {
             const knownHelmets = Array.from(AnciliaryHelmetKeys)
-            const difference = knownHelmets.filter(knownHelmet => anciliariesKeys.includes(knownHelmet))
-            if(difference.length == 0) return null
-            return difference[0]
+            const helmetId = knownHelmets.find( knownHelmet => anciliariesKeys.includes(knownHelmet.anciliaryKey) && knownHelmet.subtypeAgentKey == agentSubtype )
+            
+            if(!helmetId) return null
+            return helmetId.assetId
         }
 
-        function GetWeaponId(anciliariesKeys: string[]): string | null {
+        function GetWeaponId(agentSubtype: string, anciliariesKeys: string[]): string | null {
             const knownWeapons = Array.from(AnciliaryWeaponKeys)
-            const difference = knownWeapons.filter(knownWeapon => anciliariesKeys.includes(knownWeapon))
-            if(difference.length == 0) return null
-            return difference[0]
+            const weaponId = knownWeapons.find( knownWeapon => anciliariesKeys.includes(knownWeapon.anciliaryKey) && knownWeapon.subtypeAgentKey == agentSubtype )
+            
+            if(!weaponId) return null
+            return weaponId.assetId
         }
 
-        function GetShieldId(anciliariesKeys: string[]): string | null {
+        function GetShieldId(agentSubtype: string, anciliariesKeys: string[]): string | null {
             const knownShields = Array.from(AnciliaryShieldKeys)
-            const difference = knownShields.filter(knownShield => anciliariesKeys.includes(knownShield))
-            if(difference.length == 0) return null
-            return difference[0]
+            const shieldId = knownShields.find( knownShield => anciliariesKeys.includes(knownShield.anciliaryKey) && knownShield.subtypeAgentKey == agentSubtype )
+            
+            if(!shieldId) return null
+            return shieldId.assetId
         }
 
         function IsItemincompatibleWithAgent(agentKey: string, anciliaryKey: string): boolean {
@@ -533,6 +542,23 @@ namespace TheGrailLordsOfBretonnia {
                 }
                 return basicArmour.WeaponId
             }
+            
+            UnequipDoubleItems() {
+                const anciliaries = this.AnciliaryKeys
+                const helmetAncilliaries = Array.from(AnciliaryHelmetKeys).filter( ancillaryHelmet => anciliaries.includes(ancillaryHelmet.anciliaryKey) )
+                if(helmetAncilliaries.length <= 1) {
+                    for (const anciliary of helmetAncilliaries) {
+                        this.RemoveAnciliary(anciliary.anciliaryKey, true, true)
+                    }
+                }
+
+                const shieldAncilliaryKeys = Array.from(AnciliaryShieldKeys).filter( ancillaryShield => anciliaries.includes(ancillaryShield.anciliaryKey) )
+                if(shieldAncilliaryKeys.length <= 1) {
+                    for (const anciliary of shieldAncilliaryKeys) {
+                        this.RemoveAnciliary(anciliary.anciliaryKey, true, true)
+                    }
+                }
+            }
 
             UnequipIncompatibleItems() {
                 const incompatibleItems = this.AnciliaryKeys.filter( anciliary => 
@@ -545,25 +571,26 @@ namespace TheGrailLordsOfBretonnia {
                 return incompatibleItems
             }
     
-            WearArmour() {                
+            WearArmour() {        
+                this.UnequipDoubleItems()        
                 const incompatibleItems = this.UnequipIncompatibleItems()
                 if(incompatibleItems.length > 0 && this.Faction.IsHuman) {
                     const sentence = `This item is not compatible with this character: ${incompatibleItems[0]}`
                     alert(sentence)
                 }
                 const variantMeshId = this.GetVariantMeshId()
-                logger.Log(`this character ${this.CqiNo} ${this.LocalisedFullName} will use ${variantMeshId}`)
-                logger.Log(`this character anciliaries ${JSON.stringify(this.AnciliaryKeys)}`)
-                //this.ChangeModelAppearance(variantMeshId)
-                alert(`this character ${this.CqiNo} ${this.LocalisedFullName} will use ${variantMeshId}`)
+                logger.LogWarn(`this character ${this.CqiNo} ${this.LocalisedFullName} will use ${variantMeshId}`)
+                logger.LogWarn(`this character anciliaries ${JSON.stringify(this.AnciliaryKeys)}`)
+                //the magic goes here:
+                this.ChangeModelAppearance(variantMeshId)
             }
     
             GetVariantMeshId(): string {
                 const FaceId = this.FaceId 
-                const helmetId = GetHelmetId(this.AnciliaryKeys) ?? this.BasicHelmetId
-                const armourId = GetArmourId(this.AnciliaryKeys) ?? this.BasicArmourId
-                const weaponId = GetWeaponId(this.AnciliaryKeys) ?? this.BasicWeaponId
-                const shieldId = GetShieldId(this.AnciliaryKeys) ?? this.BasicShieldId
+                const helmetId = GetHelmetId(this.SubtypeKey, this.AnciliaryKeys) ?? this.BasicHelmetId
+                const armourId = GetArmourId(this.SubtypeKey, this.AnciliaryKeys) ?? this.BasicArmourId
+                const weaponId = GetWeaponId(this.SubtypeKey, this.AnciliaryKeys) ?? this.BasicWeaponId
+                const shieldId = GetShieldId(this.SubtypeKey, this.AnciliaryKeys) ?? this.BasicShieldId
                 
                 return `ArmourySystem__${FaceId}__${helmetId}__${armourId}__${weaponId}__${shieldId}`
             }
