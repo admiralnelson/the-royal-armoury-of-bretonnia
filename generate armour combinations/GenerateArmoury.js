@@ -129,13 +129,20 @@ function AgentSubtypeToIncompatibleAnciliaryKey() {
     const csv = fs.readFileSync('AgentSubtypesToIncompatibleAnciliaryKeys.csv', 'utf-8').replace(/\r/g, "")
     const rows = csv.split("\n")
     const result = {}
+    const asset2items = GetAssetIdToAnciliaryKeys()
+    const items = []
+    for (const key in asset2items) {
+        items.push(asset2items[key])
+    }
     
     for (let i = 1; i < rows.length; i++) {
         const values = rows[i].split(",")
-        const currentSubtype = values[0]
+        const currentSubtype = values[0]        
         if(result[currentSubtype] == undefined) {
             result[currentSubtype] = []
         }
+        if(!items.includes(values[1])) 
+            throw `this ${values[1]} anciliary is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
         result[currentSubtype].push(values[1])
     }
     
@@ -305,29 +312,29 @@ function GenerateCombinations() {
                         const faceIndex = basicSet.FaceId.indexOf(face)
                         const agentType = basicSet.AgentSubType[faceIndex]
 
-                        if(helmetsAgents.HelmetId.indexOf(helmet) >= 0) {
-                            const index = helmetsAgents.HelmetId.indexOf(helmet)
-                            const agent = helmetsAgents.AgentSubType[index]
-                            if(agentType != agent) continue
-                        }
+                        // if(helmetsAgents.HelmetId.indexOf(helmet) >= 0) {
+                        //     const index = helmetsAgents.HelmetId.indexOf(helmet)
+                        //     const agent = helmetsAgents.AgentSubType[index]
+                        //     if(agentType != agent) continue
+                        // }
 
-                        if(armoursAgents.ArmourId.indexOf(armour) >= 0) {
-                            const index = armoursAgents.ArmourId.indexOf(armour)
-                            const agent = armoursAgents.AgentSubType[index]
-                            if(agentType != agent) continue
-                        }
+                        // if(armoursAgents.ArmourId.indexOf(armour) >= 0) {
+                        //     const index = armoursAgents.ArmourId.indexOf(armour)
+                        //     const agent = armoursAgents.AgentSubType[index]
+                        //     if(agentType != agent) continue
+                        // }
 
-                        if(weaponsAgents.WeaponId.indexOf(weapon) >= 0) {
-                            const index = weaponsAgents.WeaponId.indexOf(weapon)
-                            const agent = weaponsAgents.AgentSubType[index]
-                            if(agentType != agent) continue
-                        }
+                        // if(weaponsAgents.WeaponId.indexOf(weapon) >= 0) {
+                        //     const index = weaponsAgents.WeaponId.indexOf(weapon)
+                        //     const agent = weaponsAgents.AgentSubType[index]
+                        //     if(agentType != agent) continue
+                        // }
 
-                        if(shieldsAgents.ShieldId.indexOf(shield) >= 0) {
-                            const index = shieldsAgents.ShieldId.indexOf(shield)
-                            const agent = shieldsAgents.AgentSubType[index]
-                            if(agentType != agent) continue
-                        }
+                        // if(shieldsAgents.ShieldId.indexOf(shield) >= 0) {
+                        //     const index = shieldsAgents.ShieldId.indexOf(shield)
+                        //     const agent = shieldsAgents.AgentSubType[index]
+                        //     if(agentType != agent) continue
+                        // }
 
                         //don't use incompatible hair!
                         const hairIndex = basicSet.HelmetId.indexOf(helmet)
@@ -336,24 +343,24 @@ function GenerateCombinations() {
                         }
 
                         //a bit of optimisation
-                        //don't use other basic armour (maybe I'll enable this in the future))
-                        const armourIndex = basicSet.ArmourId.indexOf(armour)
-                        if(faceIndex >=0 && armourIndex >= 0) {
-                            if(faceIndex != armourIndex) continue
-                        }
-
-                        //a bit of optimisation
                         //don't use other basic weapon (maybe I'll enable this in the future))
-                        const weaponIndex = basicSet.WeaponId.indexOf(weapon)
-                        if(faceIndex >=0 && weaponIndex >= 0) {
-                            if(faceIndex != weaponIndex) continue
-                        }
+                        // const weaponIndex = basicSet.WeaponId.indexOf(weapon)
+                        // if(faceIndex >=0 && weaponIndex >= 0) {
+                        //     if(faceIndex != weaponIndex) continue
+                        // }
 
                         //a bit of optimisation
                         //don't use other basic shield (maybe I'll enable this in the future))
-                        const shieldIndex = basicSet.ShieldId.indexOf(shield)
-                        if(faceIndex >=0 && shieldIndex >= 0) {
-                            if(faceIndex != shieldIndex) continue
+                        // const shieldIndex = basicSet.ShieldId.indexOf(shield)
+                        // if(faceIndex >=0 && shieldIndex >= 0) {
+                        //     if(faceIndex != shieldIndex) continue
+                        // }
+
+                        //a bit of optimisation
+                        //don't use other basic armour (maybe I'll enable this in the future))
+                        const armourIndex = basicSet.ArmourId.indexOf(armour)
+                        if(faceIndex >=0 && armourIndex >= 0) {
+                             if(faceIndex != armourIndex) continue
                         }
 
 
@@ -605,6 +612,13 @@ function GenerateVariantMeshDefinitions() {
         if(!AVAILABLE_ASSETS[components.ShieldId]) {
             throw(`${components.ShieldId} is not defined in AssetIdsToTheActualAssetFilename.csv`)
         }
+
+        const twoHandedWeapon = (components.ShieldId == "NONE") ? AVAILABLE_ASSETS[components.WeaponId] : ""
+        const oneHandedWeapon = (components.ShieldId != "NONE") ? AVAILABLE_ASSETS[components.WeaponId] : ""
+        const shieldWeapon    = (components.ShieldId != "NONE") ? AVAILABLE_ASSETS[components.ShieldId] : ""
+        const audioMetaShield = (components.ShieldId != "NONE") ? "audio_shield_type:metal" : ""
+        const audioMetaSword  = (components.ShieldId != "NONE") ? "audio_melee_weapon_type:sword" : ""
+        const audioMetaAxe    = (components.ShieldId == "NONE") ? "audio_melee_weapon_type:axe" : ""
         const entry = `
 <VARIANT_MESH>
     <SLOT name="head" >
@@ -623,11 +637,19 @@ function GenerateVariantMeshDefinitions() {
         </VARIANT_MESH>
     </SLOT>
     <SLOT name="weapon_1" attach_point="be_prop_0" >
-        <VARIANT_MESH model="${AVAILABLE_ASSETS[components.WeaponId]}" />
+        <VARIANT_MESH model="${twoHandedWeapon}">
+            <META_DATA>${audioMetaAxe}</META_DATA>
+        </VARIANT_MESH>
     </SLOT>
-    <SLOT name="weapon_2" attach_point="be_prop_1" />
+    <SLOT name="weapon_2" attach_point="be_prop_1">
+        <VARIANT_MESH model="${oneHandedWeapon}">
+            <META_DATA>${audioMetaSword}</META_DATA>
+        </VARIANT_MESH>
+    </SLOT>
     <SLOT name="shield" attach_point="be_prop_2" >
-        <VARIANT_MESH model="${AVAILABLE_ASSETS[components.ShieldId]}" />
+        <VARIANT_MESH model="${shieldWeapon}">
+            <META_DATA>${audioMetaShield}</META_DATA>
+        </VARIANT_MESH>
     </SLOT>
     <SLOT name="weapon_3" attach_point="be_prop_3" />
     <SLOT name="weapon_4" attach_point="be_prop_4" />
