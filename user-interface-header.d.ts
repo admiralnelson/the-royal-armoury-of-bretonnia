@@ -175,4 +175,17 @@ interface IUIComponent {
      * usable uicomponent script object using the `UIComponent` function or `CommonUserInterface.Cast` function
      */
     Parent(): IUIComponentAddress
+    /**
+     * Returns whether this uicomponent is visible, all its parents are visible, and the hierarchy is attached to the ui root. 
+     * If the supplied parent (or an ancestor of it) is orphaned from the ui root this function will return false where `uicomponent.Visible` may return true, 
+     * as the uicomponent would not be displayed if not attached to the ui root.
+     */
+    VisibleFromRoot(): boolean
+    /**
+     * Simulates a left-click on the uicomponent. 
+     * Relative co-ordinates at which the click is simulated on the component may optionally be specified. Both arguments must be supplied to specify a position.
+     * @param x X co-ordinate of click on component. Default null
+     * @param y Y co-ordinate of click on component. Default null
+     */
+    SimulateLClick(x?:number, y?:number): void
 }
