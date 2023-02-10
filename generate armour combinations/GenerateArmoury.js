@@ -1,5 +1,6 @@
 /* eslint-disable */
 const fs = require('fs')
+const { spawnSync } = require('child_process')
 
 function ClearFolder() {
     console.log(`erasing folders...`)
@@ -271,6 +272,62 @@ function GetShields() {
     return result
 }
 
+function GetSubtypeToArmours() {
+    const data = GetArmours()
+    const result = {}
+    for (let i = 0; i < data.ArmourId.length; i++) {
+        const AgentSubType = data.AgentSubType[i]
+        const value = data.ArmourId[i]
+        if(result[AgentSubType] == undefined) {
+            result[AgentSubType] = []
+        }
+        result[AgentSubType].push(value)
+    }
+    return result
+}
+
+function GetSubytpeToHelmets() {
+    const data = GetHelmets()
+    const result = {}
+    for (let i = 0; i < data.HelmetId.length; i++) {
+        const AgentSubType = data.AgentSubType[i]
+        const value = data.HelmetId[i]
+        if(result[AgentSubType] == undefined) {
+            result[AgentSubType] = []
+        }
+        result[AgentSubType].push(value)
+    }
+    return result
+}
+
+function GetSubytpeToShields() {
+    const data = GetShields()
+    const result = {}
+    for (let i = 0; i < data.ShieldId.length; i++) {
+        const AgentSubType = data.AgentSubType[i]
+        const value = data.ShieldId[i]
+        if(result[AgentSubType] == undefined) {
+            result[AgentSubType] = []
+        }
+        result[AgentSubType].push(value)
+    }
+    return result
+}
+
+function GetSubytpeToWeapons() {
+    const data = GetWeapons()
+    const result = {}
+    for (let i = 0; i < data.WeaponId.length; i++) {
+        const AgentSubType = data.AgentSubType[i]
+        const value = data.WeaponId[i]
+        if(result[AgentSubType] == undefined) {
+            result[AgentSubType] = []
+        }
+        result[AgentSubType].push(value)
+    }
+    return result
+}
+
 function GenerateBasicArmourySetIds() {
     const data = GetBasicArmourSet()   
     
@@ -309,61 +366,6 @@ function GenerateCombinations() {
             for (const armour of armours) {
                 for (const weapon of weapons) {
                     for (const shield of shields) {
-                        const faceIndex = basicSet.FaceId.indexOf(face)
-                        const agentType = basicSet.AgentSubType[faceIndex]
-
-                        // if(helmetsAgents.HelmetId.indexOf(helmet) >= 0) {
-                        //     const index = helmetsAgents.HelmetId.indexOf(helmet)
-                        //     const agent = helmetsAgents.AgentSubType[index]
-                        //     if(agentType != agent) continue
-                        // }
-
-                        // if(armoursAgents.ArmourId.indexOf(armour) >= 0) {
-                        //     const index = armoursAgents.ArmourId.indexOf(armour)
-                        //     const agent = armoursAgents.AgentSubType[index]
-                        //     if(agentType != agent) continue
-                        // }
-
-                        // if(weaponsAgents.WeaponId.indexOf(weapon) >= 0) {
-                        //     const index = weaponsAgents.WeaponId.indexOf(weapon)
-                        //     const agent = weaponsAgents.AgentSubType[index]
-                        //     if(agentType != agent) continue
-                        // }
-
-                        // if(shieldsAgents.ShieldId.indexOf(shield) >= 0) {
-                        //     const index = shieldsAgents.ShieldId.indexOf(shield)
-                        //     const agent = shieldsAgents.AgentSubType[index]
-                        //     if(agentType != agent) continue
-                        // }
-
-                        //don't use incompatible hair!
-                        const hairIndex = basicSet.HelmetId.indexOf(helmet)
-                        if(faceIndex >=0 && hairIndex >= 0) {
-                            if(faceIndex != hairIndex) continue
-                        }
-
-                        //a bit of optimisation
-                        //don't use other basic weapon (maybe I'll enable this in the future))
-                        // const weaponIndex = basicSet.WeaponId.indexOf(weapon)
-                        // if(faceIndex >=0 && weaponIndex >= 0) {
-                        //     if(faceIndex != weaponIndex) continue
-                        // }
-
-                        //a bit of optimisation
-                        //don't use other basic shield (maybe I'll enable this in the future))
-                        // const shieldIndex = basicSet.ShieldId.indexOf(shield)
-                        // if(faceIndex >=0 && shieldIndex >= 0) {
-                        //     if(faceIndex != shieldIndex) continue
-                        // }
-
-                        //a bit of optimisation
-                        //don't use other basic armour (maybe I'll enable this in the future))
-                        const armourIndex = basicSet.ArmourId.indexOf(armour)
-                        if(faceIndex >=0 && armourIndex >= 0) {
-                             if(faceIndex != armourIndex) continue
-                        }
-
-
                         const x = `ArmourySystem__${face}__${helmet}__${armour}__${weapon}__${shield}`
                         if(basicCombinations.indexOf(x) >= 0) continue
                         if(result.indexOf(x) >= 0) continue
@@ -466,6 +468,8 @@ function GenerateXMLFromIds(xmlname) {
 
     fs.writeFileSync(`autogenerated/ui/portraits/portholes/portrait_settings__autogenerated_${xmlname}.xml`, template)
     fs.writeFileSync(`autogenerated/ui/portraits/units/portrait_settings__autogenerated_${xmlname}.xml`, template)
+    spawnSync('Selfiehammer.exe', [`autogenerated/ui/portraits/portholes/portrait_settings__autogenerated_${xmlname}.xml`])
+    spawnSync('Selfiehammer.exe', [`autogenerated/ui/portraits/units/portrait_settings__autogenerated_${xmlname}.xml`])
 }
 
 //campaign_character_art_sets_tables
@@ -485,8 +489,7 @@ function GenerateCampaignCharacterArtSetsTables(tableName) {
     for (const basicId of basicIds) {
         const faceId = basicId.split("__")[1]
         const index = basicArmourSet.FaceId.indexOf(faceId)
-        const lordCultureData = basicArmourSet.Culture[index]
-        const entry = `${basicId}\t${lordCultureData["AgentType"]}\t${lordCultureData["Culture"]}\t\t\tfalse\ttrue\t${lordCultureData["AgentSubType"]}\t1.000\n`
+        const entry = `${basicId}\t${basicArmourSet.AgentType[index]}\t${basicArmourSet.Culture[index]}\t\t\tfalse\ttrue\t${basicArmourSet.AgentSubType[index]}\t1.000\n`
         entries += entry
     }
 
@@ -494,8 +497,7 @@ function GenerateCampaignCharacterArtSetsTables(tableName) {
     for (const combinationId of combinationsIds) {
         const faceId = combinationId.split("__")[1]
         const index = basicArmourSet.FaceId.indexOf(faceId)
-        const lordCultureData = basicArmourSet.Culture[index]
-        const entry = `${combinationId}\t${lordCultureData["AgentType"]}\t${lordCultureData["Culture"]}\t\t\tfalse\ttrue\t${lordCultureData["AgentSubType"]}\t1.000\n`
+        const entry = `${combinationId}\t${basicArmourSet.AgentType[index]}\t${basicArmourSet.Culture[index]}\t\t\tfalse\ttrue\t${basicArmourSet.AgentSubType[index]}\t1.000\n`
         entries += entry
     }
 
@@ -692,82 +694,85 @@ function GenerateTypescriptArmouryData(projectName, factions) {
     }
 
     function RegisteredArmours() {
-        const armours = GetArmours()
+        const subTypes = GetSubtypeToArmours()
         let entries = ``
-        for (const armour of armours.ArmourId) {
-            const index = armours.ArmourId.indexOf(armour)
-            const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[armour]
-            if(!anciliaryKey) {
-                throw `AssetId ${armour} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
+        for (const subType in subTypes) {
+            for (const armour of subTypes[subType]) {
+                const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[armour]
+                if(!anciliaryKey) {
+                    throw `AssetId ${armour} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
+                }
+                const entry = `{
+                anciliaryKey: "${anciliaryKey}",
+                subtypeAgentKey: "${subType}",
+                assetId: "${armour}"
+            },`
+                entries += entry
             }
-            const entry = `{
-            anciliaryKey: "${anciliaryKey}",
-            subtypeAgentKey: "${armours.AgentSubType[index]}",
-            assetId: "${armour}"
-        },`
-            entries += entry
         }
 
         return entries
     }
 
     function RegisteredHelmets() {
-        const helmets = GetHelmets()
+        const subTypes = GetSubytpeToHelmets()
         let entries = ``
-        for (const helmet of helmets.HelmetId) {
-            const index = helmets.HelmetId.indexOf(helmet)
-            const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[helmet]
-            if(!anciliaryKey) {
-                throw `AssetId ${helmet} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
+        for (const subType in subTypes) {
+            for (const helmet of subTypes[subType]) {
+                const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[helmet]
+                if(!anciliaryKey) {
+                    throw `AssetId ${helmet} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
+                }
+                const entry = `{
+                anciliaryKey: "${anciliaryKey}",
+                subtypeAgentKey: "${subType}",
+                assetId: "${helmet}"
+            },`
+                entries += entry
             }
-            const entry = `{
-            anciliaryKey: "${anciliaryKey}",
-            subtypeAgentKey: "${helmets.AgentSubType[index]}",
-            assetId: "${helmet}"
-        },`
-            entries += entry
         }
 
         return entries
     }
 
     function RegisteredWeapons() {
-        const weapons = GetWeapons()
+        const subTypes = GetSubytpeToWeapons()
         let entries = ``
-        for (const weapon of weapons.WeaponId) {
-            const index = weapons.WeaponId.indexOf(weapon)
-            const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[weapon]
-            if(!anciliaryKey) {
-                throw `AssetId ${weapon} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
+        for (const subType in subTypes) {
+            for (const weapon of subTypes[subType]) {
+                const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[weapon]
+                if(!anciliaryKey) {
+                    throw `AssetId ${weapon} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
+                }
+                const entry = `{
+                anciliaryKey: "${anciliaryKey}",
+                subtypeAgentKey: "${subType}",
+                assetId: "${weapon}"
+            },`
+                entries += entry
             }
-            const entry = `{
-            anciliaryKey: "${anciliaryKey}",
-            subtypeAgentKey: "${weapons.AgentSubType[index]}",
-            assetId: "${weapon}"
-        },`
-            entries += entry
         }
 
         return entries
     }
 
     function RegisteredShields() {
-        const shields = GetShields()
+        const subTypes = GetSubytpeToShields()
         let entries = ``
-        for (const shield of shields.ShieldId) {
-            const index = shields.ShieldId.indexOf(shield)
-            const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[shield]
-            if(!anciliaryKey) {
-                throw `AssetId ${shield} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
+        for (const subType in subTypes) {
+            for (const shield of subTypes[subType]) {
+                const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[shield]
+                if(!anciliaryKey) {
+                    throw `AssetId ${shield} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
+                }
+                const entry = `{
+                anciliaryKey: "${anciliaryKey}",
+                subtypeAgentKey: "${subType}",
+                assetId: "${shield}"
+            },`
+                entries += entry
             }
-            const entry = `{
-            anciliaryKey: "${anciliaryKey}",
-            subtypeAgentKey: "${shields.AgentSubType[index]}",
-            assetId: "${shield}"
-        },`
-            entries += entry
         }
-
         return entries
     }
 
@@ -823,6 +828,10 @@ namespace ${projectName} {
 }
 `
     fs.writeFileSync(`autogenerated/campaign/mod/ZZZAutoGenerated_${projectName}.ts`, source)
+}
+
+function PackToFile() {
+    
 }
 
 const SEED_NUMBER = 0x5EEDFEED

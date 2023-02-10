@@ -10,7 +10,7 @@ module.exports = {
               "types": {
                 // add a custom message to help explain why not to use it
                 "Array": "Because Typescript to Lua doesn't support it. Use [] instead, example number[] or Lord[]",
-                "Map": "Some Map constrcut such as .foreach is not supported. Use LuaMap<K, V> instead, however you are allowed to use new Map construct and cast it to LuaMap<> if you need to pass it around to other functions",
+                //"Map": "Some Map constrcut such as .foreach is not supported. Use LuaMap<K, V> instead, however you are allowed to use new Map construct and cast it to LuaMap<> if you need to pass it around to other functions",
                 "RegExp": "Regex is not supported yet.",
               },
               "extendDefaults": true

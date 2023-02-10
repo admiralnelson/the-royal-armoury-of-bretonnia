@@ -51,7 +51,10 @@ namespace TheGrailLordsOfBretonnia {
                 `wh_main_anc_follower_bretonnia_squire`,
                 `wh_main_anc_follower_empire_estalian_diestro`,
                 
+                `admiralnelson_dragon_helmet_anciliary_key`,
+                `admiralnelson_dragon_helmet_anciliary_key`,
                 `admiralnelson_dragon_helmet_anciliary_key`
+
             ]
 
             for (const item of anciliariesTest) {

@@ -349,6 +349,7 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         function SetupOnCharacterChangeItem() {
+            //when changin armour
             core.add_listener(
                 `on item equip by the player`,
                 `ComponentLClickUp`,
@@ -356,20 +357,44 @@ namespace TheGrailLordsOfBretonnia {
                 context => {
                     const selectedButton = context.string
                     if(selectedButton == null) return
-                    if(!selectedButton.startsWith(`CcoCampaignAncillary`) || 
-                       !selectedButton.startsWith(`CcoAncillariesCategory`)) return
+                    if(!selectedButton.startsWith(`CcoCampaignAncillary`) &&
+                       !selectedButton.startsWith(`ancillary_entry`)) return
+                    
+                    setTimeout(() => {
+                        ApplyTheArmours()  
+                    }, 10)
 
-                    const characterPanel = CommonUserInterface.Find(CommonUserInterface.GetRootUI(), `character_details_panel`)
-                    if(characterPanel == null) return
-                    const contextObject = characterPanel.GetContextObject(`CcoCampaignCharacter`)
-                    const characterCqi  = contextObject?.Call(`CQI()`) as number
-                    const armouredCharacter = FindArmouredCharacterByCqi(characterCqi)
-                    if(armouredCharacter == null) return
+                    //refresh the character screen
+                    setTimeout(() => {
+                        const checkButton = CommonUserInterface.Find(
+                            CommonUserInterface.GetRootUI(),
+                            "character_details_panel",
+                            "character_context_parent",
+                            "button_bottom_holder",
+                            "button_ok"    
+                        )
 
-                    armouredCharacter.WearArmour()
+                        if(checkButton == null) return
+                        checkButton.SimulateLClick()
+                    }, 15)
+
+                    setTimeout(() => {
+                        const openCharacterWindow = CommonUserInterface.Find(
+                            CommonUserInterface.GetRootUI(),
+                            "hud_campaign",
+                            "info_panel_holder",
+                            "primary_info_panel_holder",
+                            "info_button_list",
+                            "button_general"
+                        )
+
+                        if(openCharacterWindow == null) return
+                        openCharacterWindow.SimulateLClick()
+                    }, 20)
                 },
                 true
             )
+            
             logger.Log(`SetupOnCharacterChangeItem ok`)
         }
 
