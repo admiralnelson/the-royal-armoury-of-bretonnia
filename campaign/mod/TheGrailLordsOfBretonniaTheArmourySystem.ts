@@ -50,6 +50,10 @@ namespace TheGrailLordsOfBretonnia {
 
         let ArmourySystemData: ArmourySystemSaveData | null = null
 
+        export function CastToArmouredCharacter(character: Character): IArmouredCharacter | undefined {
+            return FindArmouredCharacter(character)
+        }
+
         export function RegisterFaction(factionKeys: string[]) {
             for (const factionKey of factionKeys) {
                 WhitelistedFactions.add(factionKey)
@@ -93,20 +97,14 @@ namespace TheGrailLordsOfBretonnia {
             }
         }
 
-        export function IsAnciliaryExists(subagentKey: string, anciliaryKey: string): boolean {
-            const armour = Array.from(AnciliaryArmourKeys).findIndex( anciliary => anciliary.subtypeAgentKey == subagentKey && anciliary.anciliaryKey == anciliaryKey  ) >= 0
-            const helmet = Array.from(AnciliaryHelmetKeys).findIndex( anciliary => anciliary.subtypeAgentKey == subagentKey && anciliary.anciliaryKey == anciliaryKey  ) >= 0
-            const weapon = Array.from(AnciliaryWeaponKeys).findIndex( anciliary => anciliary.subtypeAgentKey == subagentKey && anciliary.anciliaryKey == anciliaryKey  ) >= 0
-            const shield = Array.from(AnciliaryShieldKeys).findIndex( anciliary => anciliary.subtypeAgentKey == subagentKey && anciliary.anciliaryKey == anciliaryKey  ) >= 0
-            return armour || helmet || weapon || shield
-        }
-
         export function MakeThisItemIncompatibleWithAgent(subagentKey: string, anciliaries: string[]) {            
-            const compat = AnciliaryIncompatibilities.get(subagentKey)
-            if(compat == null) return
+            let compat = AnciliaryIncompatibilities.get(subagentKey)
+            if(compat == null) {
+               compat = new Set<string>()
+               AnciliaryIncompatibilities.set(subagentKey, compat) 
+            }
             for (const anciliary of anciliaries) {
-                if(IsAnciliaryExists(subagentKey, anciliary)) compat.add(anciliary)
-                else logger.LogWarn(`anciliary is not registered in the system: ${anciliary}`)
+                compat.add(anciliary)
             }             
            
         }
@@ -115,9 +113,7 @@ namespace TheGrailLordsOfBretonnia {
             if(IsRunning) return
 
             IsRunning = true
-            setTimeout(() => {
-                Begin()
-            }, 100);
+            Begin()
         }
 
         function GetBasicSetFromArmourySystemData(character: Character): BasicSet | null {
@@ -129,6 +125,21 @@ namespace TheGrailLordsOfBretonnia {
             const index = ArmourySystemData.CqiToAssociatedBasicSet.findIndex( armouredCqi => armouredCqi.Cqi == character.CqiNo)
             if(index >= 0) return ArmourySystemData.CqiToAssociatedBasicSet[index].BasicSet
             return null
+        }
+
+        function CqiReplaceArmourySystemData(character: ArmouredCharacter, basicSet: BasicSet) {
+            if(ArmourySystemData == null) {
+                logger.LogError(`AddCqiToArmourySystemData: ArmourySystemData was null`)
+                throw(`CqiReplaceArmourySystemData failed`)
+            }
+
+            const index = ArmourySystemData.CqiToAssociatedBasicSet.findIndex( armouredCqi => armouredCqi.Cqi == character.CqiNo)
+            if(index >= 0) {
+                ArmourySystemData.CqiToAssociatedBasicSet[index].BasicSet = basicSet
+                SaveData()
+            } else {
+                logger.LogError(`armoured character does not exist ${character.LocalisedFullName} cqi ${character.CqiNo}`)
+            }
         }
 
         function AddCqiToArmourySystemData(character: ArmouredCharacter, basicSet: BasicSet) {
@@ -149,11 +160,12 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         function Begin() {
-            const validate = Validate()
-            if(!validate[0]) {
-                alert(`Failed to initialise the armoury system!\nSome of the armoury data is not initalised! Reason: ${validate[1]}`)
-                return false
-            }
+            setTimeout(() => {
+                const validate = Validate()
+                if(!validate[0]) {
+                    alert(`Some of the armoury data is not initalised! Reason: ${validate[1]}`)
+                } 
+            }, 300)
 
             InitialiseForTheFirstTime()
             if(!LoadData()) {
@@ -263,7 +275,9 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         function SaveData() {
-            localStorage.setItem(SAVE_DATA_SLOT, JSON.stringify(ArmourySystemData))
+            const data = JSON.stringify(ArmourySystemData)
+            localStorage.setItem(SAVE_DATA_SLOT, data)
+            logger.LogWarn(`Data Saved! ${data}`)
         }
 
         function FindAllCharacters(): Character[] {
@@ -316,6 +330,16 @@ namespace TheGrailLordsOfBretonnia {
             return basicSet
         }
 
+        function StringArrayIdentical(array1: string[], array2: string[]) {
+            if(array1.length != array2.length) return false
+            array1.sort()
+            array2.sort()
+            for (let i = 0; i < array1.length; i++) {
+                if(array1[i] != array2[i]) return false
+            }
+            return true
+        }
+
         function ApplyTheArmours() {
             for (const armouredCharacter of ArmouredCharacters) {
                 armouredCharacter.WearArmour()
@@ -349,52 +373,17 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         function SetupOnCharacterChangeItem() {
-            //when changin armour
             core.add_listener(
-                `on item equip by the player`,
+                `on campaign ancillary click`,
                 `ComponentLClickUp`,
-                true,
-                context => {
-                    const selectedButton = context.string
-                    if(selectedButton == null) return
-                    if(!selectedButton.startsWith(`CcoCampaignAncillary`) &&
-                       !selectedButton.startsWith(`ancillary_entry`)) return
-                    
-                    setTimeout(() => {
-                        ApplyTheArmours()  
-                    }, 10)
-
-                    //refresh the character screen
-                    setTimeout(() => {
-                        const checkButton = CommonUserInterface.Find(
-                            CommonUserInterface.GetRootUI(),
-                            "character_details_panel",
-                            "character_context_parent",
-                            "button_bottom_holder",
-                            "button_ok"    
-                        )
-
-                        if(checkButton == null) return
-                        checkButton.SimulateLClick()
-                    }, 15)
-
-                    setTimeout(() => {
-                        const openCharacterWindow = CommonUserInterface.Find(
-                            CommonUserInterface.GetRootUI(),
-                            "hud_campaign",
-                            "info_panel_holder",
-                            "primary_info_panel_holder",
-                            "info_button_list",
-                            "button_general"
-                        )
-
-                        if(openCharacterWindow == null) return
-                        openCharacterWindow.SimulateLClick()
-                    }, 20)
-                },
+                context => context.string == "ancillary_entry",
+                () => setTimeout( () => {
+                    CloseCharacterScreen()
+                    ApplyTheArmours()
+                    OpenCharacterScreen()
+                }, 100),
                 true
             )
-            
             logger.Log(`SetupOnCharacterChangeItem ok`)
         }
 
@@ -421,11 +410,7 @@ namespace TheGrailLordsOfBretonnia {
                 `CharacterAncillaryGained`,
                 true,
                 context => {
-                    if(context.character == null) return
-                    const character = FindArmouredCharacter(WrapICharacterObjectToCharacter(context.character()))
-                    if(character == null) return
-
-                    character.WearArmour()
+                    if(!IsCharacterScreenBeingDisplayed()) ApplyTheArmours()
                 },
                 true
             )
@@ -487,7 +472,49 @@ namespace TheGrailLordsOfBretonnia {
             return ancillariesArray.includes(anciliaryKey)
         }
 
-        class ArmouredCharacter extends Character {
+        function IsCharacterScreenBeingDisplayed(): boolean {
+            const characterPanel = CommonUserInterface.Find(
+                CommonUserInterface.GetRootUI(),
+                `character_details_panel`,
+            )
+
+            if(characterPanel == null) return false
+            return characterPanel.VisibleFromRoot()
+        }
+
+        export interface IArmouredCharacter {
+            ChangeBasicAppearance(thumbnailFileName: string): boolean
+            GetVariantMeshId(): void
+        }
+
+        function CloseCharacterScreen() {
+            const checkButton = CommonUserInterface.Find(
+                CommonUserInterface.GetRootUI(),
+                "character_details_panel",
+                "character_context_parent",
+                "button_bottom_holder",
+                "button_ok"
+            )
+
+            if(checkButton == null) return
+            checkButton.SimulateLClick()
+        }
+
+        function OpenCharacterScreen() {
+            const openCharacterWindow = CommonUserInterface.Find(
+                CommonUserInterface.GetRootUI(),
+                "hud_campaign",
+                "info_panel_holder",
+                "primary_info_panel_holder",
+                "info_button_list",
+                "button_general"
+            )
+
+            if(openCharacterWindow == null) return
+            openCharacterWindow.SimulateLClick()
+        }
+
+        class ArmouredCharacter extends Character implements IArmouredCharacter {
 
             private DoNotRemoveItemsWithKeywords = ["mount", "warhorse", "hippogrif", "pegasus"]
 
@@ -568,41 +595,73 @@ namespace TheGrailLordsOfBretonnia {
                 return basicArmour.WeaponId
             }
             
-            UnequipDoubleItems() {
+            private UnequipDoubleItems() {
                 const anciliaries = this.AnciliaryKeys
-                const helmetAncilliaries = Array.from(AnciliaryHelmetKeys).filter( ancillaryHelmet => anciliaries.includes(ancillaryHelmet.anciliaryKey) )
-                if(helmetAncilliaries.length <= 1) {
+                const helmetAncilliaries = Array.from(AnciliaryHelmetKeys).filter( 
+                    ancillaryHelmet => anciliaries.includes(ancillaryHelmet.anciliaryKey) && 
+                                       ancillaryHelmet.subtypeAgentKey == this.SubtypeKey )
+                if(helmetAncilliaries.length > 1) {
+                    const firstItem = helmetAncilliaries[0]
                     for (const anciliary of helmetAncilliaries) {
-                        this.RemoveAnciliary(anciliary.anciliaryKey, true, true)
+                        if(anciliary != firstItem) {
+                            this.RemoveAnciliary(anciliary.anciliaryKey, true, true)
+                        }
                     }
                 }
 
-                const shieldAncilliaryKeys = Array.from(AnciliaryShieldKeys).filter( ancillaryShield => anciliaries.includes(ancillaryShield.anciliaryKey) )
-                if(shieldAncilliaryKeys.length <= 1) {
+                const shieldAncilliaryKeys = Array.from(AnciliaryShieldKeys).filter( 
+                    ancillaryShield => anciliaries.includes(ancillaryShield.anciliaryKey) && 
+                                       ancillaryShield.subtypeAgentKey == this.SubtypeKey )
+                if(shieldAncilliaryKeys.length > 1) {
+                    const firstItem = shieldAncilliaryKeys[0]
                     for (const anciliary of shieldAncilliaryKeys) {
-                        this.RemoveAnciliary(anciliary.anciliaryKey, true, true)
+                        if(anciliary != firstItem) {
+                            this.RemoveAnciliary(anciliary.anciliaryKey, true, true)                            
+                        }
                     }
                 }
+
+                //capes
             }
 
-            UnequipIncompatibleItems() {
-                const incompatibleItems = this.AnciliaryKeys.filter( anciliary => 
-                    IsItemincompatibleWithAgent(this.SubtypeKey, anciliary) && 
-                    !this.DoNotRemoveItemsWithKeywords.some( keyword => anciliary.includes(keyword) ) 
-                )
+            private UnequipIncompatibleItems() {
+                const incompatibleItems = []
+                const anciliaries = this.AnciliaryKeys
+                for (const anciliary of anciliaries) {
+                    if(IsItemincompatibleWithAgent(this.SubtypeKey, anciliary)) 
+                        incompatibleItems.push(anciliary)
+                }
+
                 for (const incompatibleItem of incompatibleItems) {
                     this.RemoveAnciliary(incompatibleItem, true, true)
                 }
                 return incompatibleItems
             }
+
+            ChangeBasicAppearance(thumbnailFileName: string): boolean {
+                const thumbnail = ThumbnailFilenamesToAssociatedBasicSet.get(thumbnailFileName)
+                if(thumbnail == undefined) {
+                    logger.LogWarn(`ChangeBasicAppearance ${thumbnailFileName} not found!`)
+                    return false
+                }
+                CqiReplaceArmourySystemData(this, thumbnail)
+
+                this.WearArmour()
+                return true
+            }
     
             WearArmour() {        
                 this.UnequipDoubleItems()        
                 const incompatibleItems = this.UnequipIncompatibleItems()
-                if(incompatibleItems.length > 0 && this.Faction.IsHuman) {
-                    const sentence = `This item is not compatible with this character: ${incompatibleItems[0]}`
-                    alert(sentence)
-                }
+                setTimeout(() => {
+                    if(incompatibleItems.length > 0 && 
+                        this.Faction.IsHuman && 
+                        IsCharacterScreenBeingDisplayed()) {
+                        const sentence = `This item is not compatible with this character: ${incompatibleItems[0]}`
+                        console.warn(`This item is not compatible with this character: ${incompatibleItems[0]}`)
+                        alert(sentence)
+                    } 
+                }, 300)
                 const variantMeshId = this.GetVariantMeshId()
                 logger.LogWarn(`this character ${this.CqiNo} ${this.LocalisedFullName} will use ${variantMeshId}`)
                 logger.LogWarn(`this character anciliaries ${JSON.stringify(this.AnciliaryKeys)}`)

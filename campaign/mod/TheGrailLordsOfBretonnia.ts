@@ -53,8 +53,22 @@ namespace TheGrailLordsOfBretonnia {
                 
                 `admiralnelson_dragon_helmet_anciliary_key`,
                 `admiralnelson_dragon_helmet_anciliary_key`,
-                `admiralnelson_dragon_helmet_anciliary_key`
+                `admiralnelson_dragon_helmet_anciliary_key`,
 
+                `admiralnelson_bascinet_helmet_anciliary_key`,
+                `admiralnelson_bascinet_helmet_anciliary_key`,
+                
+                `admiralnelson_feathered_helmet_anciliary_key`,
+                `admiralnelson_feathered_helmet_anciliary_key`,
+                `admiralnelson_the_ladys_ward_shield_ancillary_key`,
+                `admiralnelson_the_ladys_ward_shield_ancillary_key`,
+                `admiralnelson_the_unbreakable_wall_shield_anciliary_key`,
+                `admiralnelson_the_unbreakable_wall_shield_anciliary_key`,
+                `admiralnelson_bane_of_the_undead_axe_weapon_ancillary_key,`,
+                `admiralnelson_bane_of_the_undead_axe_weapon_ancillary_key,`,
+
+                `wh_dlc07_anc_weapon_sword_of_the_ladys_champion`,
+                `wh_dlc07_anc_weapon_sword_of_the_ladys_champion`,
             ]
 
             for (const item of anciliariesTest) {
@@ -82,12 +96,37 @@ namespace TheGrailLordsOfBretonnia {
 
             new Lord({
                 factionKey: "wh_main_brt_bretonnia",
+                agentKey: "admiralnelson_bret_lord_massif_sword_shield_agent_key",
+                regionKey: faction.FactionLeader?.CurrentRegionKey,
+                lordCreatedCallback: (lord) => {
+                    console.log(`ok`)
+                } 
+            })
+
+            new Lord({
+                factionKey: "wh_main_brt_bretonnia",
                 agentKey: "admiralnelson_bret_lord_massif_agent_key",
                 regionKey: faction.FactionLeader?.CurrentRegionKey,
                 lordCreatedCallback: (lord) => {
                     console.log(`ok`)
                 } 
             })
+
+            new Lord({
+                factionKey: "wh_main_brt_bretonnia",
+                agentKey: "admiralnelson_bret_lord_massif_agent_key",
+                regionKey: faction.FactionLeader?.CurrentRegionKey,
+                lordCreatedCallback: (lord) => {
+                    console.log(`ok`)
+                    const armouredLord = ArmourySystem.CastToArmouredCharacter(lord)
+                    if(armouredLord) armouredLord.ChangeBasicAppearance(`UI/Portraits/Portholes/admiralnelson/bret_lord_massif_4.png`)
+                } 
+            })
+
+            for (let i = 0; i < 5; i++) {
+                cm.spawn_character_to_pool("wh_main_brt_bretonnia", "", "", "", "", 18, true, "general", `admiralnelson_bret_lord_massif_agent_key`, false, "")                
+                cm.spawn_character_to_pool("wh_main_brt_bretonnia", "", "", "", "", 18, true, "general", `admiralnelson_bret_lord_massif_sword_shield_agent_key`, false, "")                
+            }
 
         }
 
