@@ -143,7 +143,7 @@ function AgentSubtypeToIncompatibleAnciliaryKey() {
             result[currentSubtype] = []
         }
         if(!items.includes(values[1])) 
-            throw `this ${values[1]} anciliary is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
+            throw `AgentSubtypesToIncompatibleAnciliaryKeys.csv this ${values[1]} anciliary is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
         result[currentSubtype].push(values[1])
     }
     
@@ -430,7 +430,7 @@ function GenerateXMLFromIds(xmlname) {
         const faceIdOnly = combinationId.split("__")[1]
         const thumbnail = FACE_ID_TO_THUMBNAILS[faceIdOnly]
         if(thumbnail == undefined) {
-            throw `this faceid ${faceIdOnly} has no thumbnail!`
+            throw `FaceAndBasicLooks.csv this faceid ${faceIdOnly} has no thumbnail!`
         }
         const entry = `
         <Entry id="${combinationId}">
@@ -558,22 +558,22 @@ function GenerateCampaignCharacterArtsTables(tableName, seedNumber) {
         const faceId = id.split("__")[1]
         const animation = ANIMATIONS[faceId]
         if(!animation) {
-            throw `${faceId} has undefined animation`
+            throw `FaceToCampaignAnimations.csv ${faceId} has undefined animation`
         }
         if(animation.LandAnimation == undefined) {
-            throw `${faceId} has undefined Land animation`
+            throw `FaceToCampaignAnimations.csv ${faceId} has undefined Land animation`
         }
         if(animation.SeaAnimation == undefined) {
-            throw `${faceId} has undefined Sea animation`
+            throw `FaceToCampaignAnimations.csv ${faceId} has undefined Sea animation`
         }
         if(animation.NavyAnimation == undefined) {
-            throw `${faceId} has undefined Navy animation`
+            throw `FaceToCampaignAnimations.csv ${faceId} has undefined Navy animation`
         }
         if(animation.SeaUniform == undefined) {
-            throw `${faceId} has undefined Sea uniform`
+            throw `FaceToCampaignAnimations.csv ${faceId} has undefined Sea uniform`
         }
         if(animation.NavyUniform == undefined) {
-            throw `${faceId} has undefined Navy uniform`
+            throw `FaceToCampaignAnimations.csv ${faceId} has undefined Navy uniform`
         }
 
         entries += `${seedNumber}\t${id}\t0\t0\t\tnone\t${id}\t\t\t${animation.SeaUniform}\t${animation.NavyUniform}\t${animation.LandAnimation}\t${animation.SeaAnimation}\t${animation.NavyAnimation}\t0\t0\t0\n`
