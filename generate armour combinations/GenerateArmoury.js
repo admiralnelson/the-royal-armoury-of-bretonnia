@@ -426,9 +426,8 @@ function GenerateCombinations() {
 
     function IsWeaponCompatible(faceId, weaponIdToSearch) {
         const faceIdx = basicSet.FaceId.indexOf(faceId)
-        const basicWeaponIdx = basicSet.WeaponId.indexOf(weaponIdToSearch)
-        //basic weapon
-        if(faceIdx == basicWeaponIdx) return true
+        const basicWeaponId = basicSet.WeaponId[faceIdx]
+        if(weaponIdToSearch == basicWeaponId) return true
         
         const AgentSubType = basicSet.AgentSubType[faceIdx]
         for (let i = 0; i < weaponsAndSubtype.AgentSubType.length; i++) {
@@ -441,9 +440,8 @@ function GenerateCombinations() {
 
     function IsArmourCompatible(faceId, armourIdToSearch) {
         const faceIdx = basicSet.FaceId.indexOf(faceId)
-        const armourIdx = basicSet.ArmourId.indexOf(armourIdToSearch)
-        //basic armour
-        if(faceIdx == armourIdx) return true
+        const armourId = basicSet.ArmourId[faceIdx]
+        if(armourIdToSearch == armourId) return true
 
         const AgentSubType = basicSet.AgentSubType[faceIdx]
         for (let i = 0; i < armoursAndSubtype.AgentSubType.length; i++) {
@@ -454,14 +452,27 @@ function GenerateCombinations() {
         return false
     }
 
+    function IsHelmetCompatible(faceId, helmetIdToSearch) {
+        const faceIdx = basicSet.FaceId.indexOf(faceId)
+        const helmetId = basicSet.HelmetId[faceIdx]
+        if(helmetIdToSearch == helmetId) return true
+
+        const AgentSubType = basicSet.AgentSubType[faceIdx]
+        for (let i = 0; i < helmetsAndSubtype.AgentSubType.length; i++) {
+            const agentSubtypeHelmet = helmetsAndSubtype.AgentSubType[i]
+            const helmetId = helmetsAndSubtype.HelmetId[i]
+            if(agentSubtypeHelmet == AgentSubType && helmetId == helmetIdToSearch) return true
+        }
+        return false
+    }
+
     function IsShieldCompatible(faceId, shieldIdToSearch) {
         if(!IsAgentSupportShield(faceId)) return false
         if(shieldIdToSearch == "NONE") return false
 
         const faceIdx = basicSet.FaceId.indexOf(faceId)
-        const shieldIdx = basicSet.ShieldId.indexOf(shieldIdToSearch)
-        //basic shield
-        if(faceIdx == shieldIdx) return true
+        const shieldId = basicSet.ShieldId[faceIdx]
+        if(shieldIdToSearch == shieldId) return true
 
         const AgentSubType = basicSet.AgentSubType[faceIdx]
         for (let i = 0; i < shieldsAndSubtype.AgentSubType.length; i++) {
@@ -479,11 +490,10 @@ function GenerateCombinations() {
     }
 
     function IsCapeCompatible(faceId, capeIdToSearch) {
-        const faceIdx = basicSet.FaceId.indexOf(faceId)
-        const capeIdx = basicSet.CapeId.indexOf(capeIdToSearch)
-        //basic armour
-        if(faceIdx == capeIdx) return true
         if(capeIdToSearch == "NONE") return true
+        const faceIdx = basicSet.CapeId.indexOf(faceId)
+        const capeId = basicSet.CapeId[faceIdx]
+        if(capeIdToSearch == capeId) return true
 
         const AgentSubType = basicSet.AgentSubType[faceIdx]
         for (let i = 0; i < capesAndSubtype.AgentSubType.length; i++) {
@@ -494,67 +504,29 @@ function GenerateCombinations() {
         return false
     }
 
-    function IsMismatchBasicHelmetWithFace(faceId, helmetId) {
-        const faceBasicIndex = basicSet.FaceId.indexOf(faceId)
-        const helmetBasicIndex = basicSet.HelmetId.indexOf(helmetId)
-        return helmetBasicIndex >= 0 && helmetBasicIndex != faceBasicIndex
-    }
-
-    function IsMismatchBasicArmourWithFace(faceId, armourId) {
-        const faceBasicIndex = basicSet.FaceId.indexOf(faceId)
-        const armourBasicIndex = basicSet.ArmourId.indexOf(armourId)
-        return armourBasicIndex >= 0 && armourBasicIndex != faceBasicIndex
-    }
-
-    function IsMismatchBasicWeaponWithFace(faceId, weaponId) {
-        const faceBasicIndex = basicSet.FaceId.indexOf(faceId)
-        const weaponBasicIndex = weaponsAndSubtype.WeaponId.indexOf(weaponId)
-        return weaponBasicIndex >= 0 && weaponBasicIndex != faceBasicIndex
-    }
-
     const result = []
     let totalPruned = 0
     for (const face of basicSet.FaceId) {
-        const faceBasicIndex = basicSet.FaceId.indexOf(face)
-        const faceAgentSubtype = basicSet.AgentSubType[faceBasicIndex]
         for (const helmet of helmets) {
-            if(IsMismatchBasicHelmetWithFace(face, helmet)) {
+            if(!IsHelmetCompatible(face, helmet)) {
                 totalPruned++
                 continue
             }
 
             for (const armour of armours) {
-                if(IsMismatchBasicArmourWithFace(face, armour)) {
+                if(!IsArmourCompatible(face, armour)) {
                     totalPruned++
                     continue
                 }
 
-                if(!IsArmourCompatible(face, armour)) continue
-
                 for (const weapon of weapons) {
-                    //check if weapon compatible with the face/agenttype
-                    const weaponIndex = weaponsAndSubtype.WeaponId.indexOf(weapon)
-                    if(weaponIndex >= 0) {
-                        const weaponAgentSubtype = weaponsAndSubtype.AgentSubType[weaponIndex]
-                        if(faceAgentSubtype != weaponAgentSubtype) {
-                            totalPruned++
-                            continue
-                        }
-                    }
 
-                    if(!IsWeaponCompatible(face, weapon)) continue
+                    if(!IsWeaponCompatible(face, weapon)){
+                        totalPruned++
+                        continue
+                    }
                     
                     for (let shield of shields) {
-                        //check if shield compatible with the face/agenttype
-                        const shieldIndex = shieldsAndSubtype.ShieldId.indexOf(shield)
-                        if(shieldIndex >= 0) {
-                            const shieldAgentSubtype = shieldsAndSubtype.AgentSubType[shieldIndex]
-                            if(faceAgentSubtype != shieldAgentSubtype) {
-                                totalPruned++
-                                continue
-                            }
-                        }
-
                         if(IsAgentSupportShield(face) && !IsShieldCompatible(face, shield)) continue
 
                         for(const cape of capes) {
@@ -577,7 +549,8 @@ function GenerateCombinations() {
         }   
     }
 
-    console.log(`GenerateCombinations: pruned impossible path ${totalPruned}`)
+    const total = basicSet.FaceId.length * helmets.length * armours.length * weapons.length * shields.length * capes.length
+    console.log(`GenerateCombinations: pruned impossible path ${totalPruned} generated ${result.length} without prunning ${ total } reduction is ${ ((total - result.length) / total) * 100 } %`)
     return result
 }
 
