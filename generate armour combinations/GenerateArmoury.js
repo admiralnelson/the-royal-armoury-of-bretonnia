@@ -272,6 +272,32 @@ function GetShields() {
     return result
 }
 
+function GetCapes() {
+    const basicArmourSet = GetBasicArmourSet()
+
+    const csv = fs.readFileSync('ListOfCapes.csv', 'utf-8').replace(/\r/g, "")
+    
+    const lines = csv.split('\n')
+    const headers = lines[0].split(',')
+
+    const result = {};
+    headers.forEach(header => {
+        result[header] = []
+    })
+
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',')
+        headers.forEach((header, index) => {
+            if(index > 0 && basicArmourSet[header].includes(values[index])) {
+                throw `${values[index]} should not be put in ListOfCapes.csv`
+            }
+            result[header].push(values[index])
+        })
+    }
+
+    return result
+}
+
 function GetSubtypeToArmours() {
     const data = GetArmours()
     const result = {}
@@ -328,6 +354,41 @@ function GetSubytpeToWeapons() {
     return result
 }
 
+function GetSubytpeToCapes() {
+    const data = GetCapes()
+    const result = {}
+    for (let i = 0; i < data.CapeId.length; i++) {
+        const AgentSubType = data.AgentSubType[i]
+        const value = data.CapeId[i]
+        if(result[AgentSubType] == undefined) {
+            result[AgentSubType] = []
+        }
+        result[AgentSubType].push(value)
+    }
+    return result
+}
+
+function GetConflictingAnciliaries() {
+    
+    const csv = fs.readFileSync('IncompatibleAnciliaries.csv', 'utf-8').replace(/\r/g, "")
+    
+    const lines = csv.split('\n')
+    if(lines.length == 1) return {}
+
+    const result = {}
+    for (let i = 1; i < lines; i++) {
+        const line = lines[i]
+        const keyValue = line.split(",")
+        const key = keyValue[0]
+        const value = keyValue[1]
+        if(result[key] == undefined) {
+            result[key] = []
+        }
+        result[key].push(value)
+    }
+    return result
+}
+
 function GenerateBasicArmourySetIds() {
     const data = GetBasicArmourSet()   
     
@@ -339,43 +400,184 @@ function GenerateBasicArmourySetIds() {
             HelmetId: data.HelmetId[i],
             ArmourId: data.ArmourId[i],
             WeaponId: data.WeaponId[i],
-            ShieldId: data.ShieldId[i]
+            ShieldId: data.ShieldId[i],
+            CapeId: data.CapeId[i]
         };
-        result.push(`ArmourySystem__${row.FaceId}__${row.HelmetId}__${row.ArmourId}__${row.WeaponId}__${row.ShieldId}`);
+        result.push(`ArmourySystem__${row.FaceId}__${row.HelmetId}__${row.ArmourId}__${row.WeaponId}__${row.ShieldId}__${row.CapeId}`);
     }
     return result
 }
+
 
 function GenerateCombinations() {
     const basicSet = GetBasicArmourSet()
     const basicCombinations = GenerateBasicArmourySetIds()
 
     const helmets = GetHelmets().HelmetId.concat(basicSet.HelmetId)
+    const helmetsAndSubtype = GetHelmets()
     const armours = GetArmours().ArmourId.concat(basicSet.ArmourId)
+    const armoursAndSubtype = GetArmours()
     const weapons = GetWeapons().WeaponId.concat(basicSet.WeaponId)
+    const weaponsAndSubtype = GetWeapons()
     const shields = GetShields().ShieldId.concat(basicSet.ShieldId)
+    const shieldsAndSubtype = GetShields()
+    const capes = GetCapes().CapeId.concat(basicSet.CapeId)
+    const capesAndSubtype = GetCapes()
 
-    const helmetsAgents = GetHelmets()
-    const armoursAgents = GetArmours()
-    const weaponsAgents = GetWeapons()
-    const shieldsAgents = GetShields()
+    function IsWeaponCompatible(faceId, weaponIdToSearch) {
+        const faceIdx = basicSet.FaceId.indexOf(faceId)
+        const basicWeaponIdx = basicSet.WeaponId.indexOf(weaponIdToSearch)
+        //basic weapon
+        if(faceIdx == basicWeaponIdx) return true
+        
+        const AgentSubType = basicSet.AgentSubType[faceIdx]
+        for (let i = 0; i < weaponsAndSubtype.AgentSubType.length; i++) {
+            const agentSubtypeWeapon = weaponsAndSubtype.AgentSubType[i]
+            const weaponId = weaponsAndSubtype.WeaponId[i]
+            if(agentSubtypeWeapon == AgentSubType && weaponId == weaponIdToSearch) return true
+        }
+        return false
+    }
+
+    function IsArmourCompatible(faceId, armourIdToSearch) {
+        const faceIdx = basicSet.FaceId.indexOf(faceId)
+        const armourIdx = basicSet.ArmourId.indexOf(armourIdToSearch)
+        //basic armour
+        if(faceIdx == armourIdx) return true
+
+        const AgentSubType = basicSet.AgentSubType[faceIdx]
+        for (let i = 0; i < armoursAndSubtype.AgentSubType.length; i++) {
+            const agentSubtypeArmour = armoursAndSubtype.AgentSubType[i]
+            const armourId = armoursAndSubtype.ArmourId[i]
+            if(agentSubtypeArmour == AgentSubType && armourId == armourIdToSearch) return true
+        }
+        return false
+    }
+
+    function IsShieldCompatible(faceId, shieldIdToSearch) {
+        if(!IsAgentSupportShield(faceId)) return false
+        if(shieldIdToSearch == "NONE") return false
+
+        const faceIdx = basicSet.FaceId.indexOf(faceId)
+        const shieldIdx = basicSet.ShieldId.indexOf(shieldIdToSearch)
+        //basic shield
+        if(faceIdx == shieldIdx) return true
+
+        const AgentSubType = basicSet.AgentSubType[faceIdx]
+        for (let i = 0; i < shieldsAndSubtype.AgentSubType.length; i++) {
+            const agentSubtypeShield = shieldsAndSubtype.AgentSubType[i]
+            const shieldId = shieldsAndSubtype.ShieldId[i]
+            if(agentSubtypeShield == AgentSubType && shieldId == shieldIdToSearch) return true
+        }
+        return false
+    }
+
+    function IsAgentSupportShield(faceId) {
+        const faceIdx = basicSet.FaceId.indexOf(faceId)
+        return basicSet.ShieldId[faceIdx] != "NONE"
+        
+    }
+
+    function IsCapeCompatible(faceId, capeIdToSearch) {
+        const faceIdx = basicSet.FaceId.indexOf(faceId)
+        const capeIdx = basicSet.CapeId.indexOf(capeIdToSearch)
+        //basic armour
+        if(faceIdx == capeIdx) return true
+        if(capeIdToSearch == "NONE") return true
+
+        const AgentSubType = basicSet.AgentSubType[faceIdx]
+        for (let i = 0; i < capesAndSubtype.AgentSubType.length; i++) {
+            const agentSubtypeCape = capesAndSubtype.AgentSubType[i]
+            const capeId = capesAndSubtype.CapeId[i]
+            if(agentSubtypeCape == AgentSubType && capeId == capeIdToSearch) return true
+        }
+        return false
+    }
+
+    function IsMismatchBasicHelmetWithFace(faceId, helmetId) {
+        const faceBasicIndex = basicSet.FaceId.indexOf(faceId)
+        const helmetBasicIndex = basicSet.HelmetId.indexOf(helmetId)
+        return helmetBasicIndex >= 0 && helmetBasicIndex != faceBasicIndex
+    }
+
+    function IsMismatchBasicArmourWithFace(faceId, armourId) {
+        const faceBasicIndex = basicSet.FaceId.indexOf(faceId)
+        const armourBasicIndex = basicSet.ArmourId.indexOf(armourId)
+        return armourBasicIndex >= 0 && armourBasicIndex != faceBasicIndex
+    }
+
+    function IsMismatchBasicWeaponWithFace(faceId, weaponId) {
+        const faceBasicIndex = basicSet.FaceId.indexOf(faceId)
+        const weaponBasicIndex = weaponsAndSubtype.WeaponId.indexOf(weaponId)
+        return weaponBasicIndex >= 0 && weaponBasicIndex != faceBasicIndex
+    }
 
     const result = []
+    let totalPruned = 0
     for (const face of basicSet.FaceId) {
+        const faceBasicIndex = basicSet.FaceId.indexOf(face)
+        const faceAgentSubtype = basicSet.AgentSubType[faceBasicIndex]
         for (const helmet of helmets) {
+            if(IsMismatchBasicHelmetWithFace(face, helmet)) {
+                totalPruned++
+                continue
+            }
+
             for (const armour of armours) {
+                if(IsMismatchBasicArmourWithFace(face, armour)) {
+                    totalPruned++
+                    continue
+                }
+
+                if(!IsArmourCompatible(face, armour)) continue
+
                 for (const weapon of weapons) {
-                    for (const shield of shields) {
-                        const x = `ArmourySystem__${face}__${helmet}__${armour}__${weapon}__${shield}`
-                        if(basicCombinations.indexOf(x) >= 0) continue
-                        if(result.indexOf(x) >= 0) continue
-                        result.push(x)
+                    //check if weapon compatible with the face/agenttype
+                    const weaponIndex = weaponsAndSubtype.WeaponId.indexOf(weapon)
+                    if(weaponIndex >= 0) {
+                        const weaponAgentSubtype = weaponsAndSubtype.AgentSubType[weaponIndex]
+                        if(faceAgentSubtype != weaponAgentSubtype) {
+                            totalPruned++
+                            continue
+                        }
+                    }
+
+                    if(!IsWeaponCompatible(face, weapon)) continue
+                    
+                    for (let shield of shields) {
+                        //check if shield compatible with the face/agenttype
+                        const shieldIndex = shieldsAndSubtype.ShieldId.indexOf(shield)
+                        if(shieldIndex >= 0) {
+                            const shieldAgentSubtype = shieldsAndSubtype.AgentSubType[shieldIndex]
+                            if(faceAgentSubtype != shieldAgentSubtype) {
+                                totalPruned++
+                                continue
+                            }
+                        }
+
+                        if(IsAgentSupportShield(face) && !IsShieldCompatible(face, shield)) continue
+
+                        for(const cape of capes) {
+                            //check if face/subtype support shields (shield is not set to NONE in FaceAndBasicLooks.csv)
+                            const isSupportsShield = IsAgentSupportShield(face)
+                            if(!isSupportsShield) {
+                                shield = "NONE"
+                            }
+
+                            if(!IsCapeCompatible(face, cape)) continue
+
+                            const x = `ArmourySystem__${face}__${helmet}__${armour}__${weapon}__${shield}__${cape}`
+                            if(basicCombinations.indexOf(x) >= 0) continue
+                            if(result.indexOf(x) >= 0) continue
+                            result.push(x)
+                        }
                     }
                 }
             }
         }   
     }
 
+    console.log(`GenerateCombinations: pruned impossible path ${totalPruned}`)
     return result
 }
 
@@ -677,7 +879,8 @@ function GenerateTypescriptArmouryData(projectName, factions) {
                 HelmetId: "${armourset.HelmetId[i]}",
                 ArmourId: "${armourset.ArmourId[i]}",
                 WeaponId: "${armourset.WeaponId[i]}",
-                ShieldId: "${armourset.ShieldId[i]}"
+                ShieldId: "${armourset.ShieldId[i]}",
+                CapeId: "${armourset.CapeId[i]}"
             },`
             generatedBasicSet += template
         }
@@ -776,13 +979,43 @@ function GenerateTypescriptArmouryData(projectName, factions) {
         return entries
     }
 
-    function IncompatibleItems() {
+    function RegisteredCapes() {
+        const subTypes = GetSubytpeToCapes()
         let entries = ``
+        for (const subType in subTypes) {
+            for (const cape of subTypes[subType]) {
+                const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[cape]
+                if(!anciliaryKey) {
+                    throw `AssetId ${cape} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
+                }
+                const entry = `{
+                anciliaryKey: "${anciliaryKey}",
+                subtypeAgentKey: "${subType}",
+                assetId: "${cape}"
+            },`
+                entries += entry
+            }
+        }
+        return entries
+    }
+
+    function IncompatibleItems() {
+        let entries = `//incompatible items\n\t`
         const incompatibleItems = AgentSubtypeToIncompatibleAnciliaryKey()
         for (const key in incompatibleItems) {            
             const entry = `ArmourySystem.MakeThisItemIncompatibleWithAgent("${key}", ${JSON.stringify(incompatibleItems[key])})\n`
             entries += entry
         }        
+        return entries
+    }
+
+    function ConflictingItems() {
+        let entries = `//conflicting items\n\t`
+        const conflictingItems = GetConflictingAnciliaries()
+        for (const anciliary in conflictingItems) {
+            const conflictingAnciliaries = conflictingItems[anciliary]
+            const entry = `ArmourySystem.MakeThisItemIncompatibleWithItems("${anciliary}", ${JSON.stringify(conflictingAnciliaries)})\n`
+        }
         return entries
     }
 
@@ -793,9 +1026,22 @@ function GenerateTypescriptArmouryData(projectName, factions) {
     const generatedHelmets = RegisteredHelmets()
     const generatedWeapons = RegisteredWeapons()
     const generatedShields = RegisteredShields()
+    const generatedCapes   = RegisteredCapes()
     const incompatibleItems = IncompatibleItems()
+    const conflictingItems = ConflictingItems()
+    const currentDate = new Date()
+    const timestamp = currentDate.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric'
+      })
     const source = `
 namespace ${projectName} {
+
+    /** AUTOGENERATED TYPESCRIPT ${timestamp} */
 
     type ThumbnailFilenameToBasicSet = {
         [thumbnailFile: string]: ArmourySystem.BasicSet
@@ -822,9 +1068,12 @@ namespace ${projectName} {
     ArmourySystem.RegisterShield([
         ${generatedShields}
     ])
+    ArmourySystem.RegisterCape([
+        ${generatedCapes}
+    ])
 
     ${incompatibleItems}
-    
+    ${conflictingItems}
 }
 `
     fs.writeFileSync(`autogenerated/campaign/mod/ZZZAutoGenerated_${projectName}.ts`, source)
