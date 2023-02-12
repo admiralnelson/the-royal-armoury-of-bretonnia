@@ -8,6 +8,7 @@ namespace TheGrailLordsOfBretonnia {
             HelmetId: string
             WeaponId: string
             ShieldId: string        
+            CapeId  : string
         }
 
         export type AnciliaryKeyToAssetId = {
@@ -34,6 +35,8 @@ namespace TheGrailLordsOfBretonnia {
         const AnciliaryHelmetKeys: Set<AnciliaryKeyToAssetId> = new Set<AnciliaryKeyToAssetId>()
         const AnciliaryWeaponKeys: Set<AnciliaryKeyToAssetId> = new Set<AnciliaryKeyToAssetId>()
         const AnciliaryShieldKeys: Set<AnciliaryKeyToAssetId> = new Set<AnciliaryKeyToAssetId>()
+        const AnciliaryCapeKeys: Set<AnciliaryKeyToAssetId> = new Set<AnciliaryKeyToAssetId>()
+
 
         let IsRunning = false
 
@@ -45,8 +48,9 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         const ThumbnailFilenamesToAssociatedBasicSet: Map<string, BasicSet> = new Map<string, BasicSet>()
-        const AnciliaryIncompatibilities: Map<string, Set<string>> = new Map<string, Set<string>>()
+        const AgentSubtypeAnciliaryIncompatibilities: Map<string, Set<string>> = new Map<string, Set<string>>()
         const ArmouredCharacters: Set<ArmouredCharacter> = new Set<ArmouredCharacter>()
+        const ConflictingAnciliaries: Map<string, Set<string>> = new Map<string, Set<string>>()
 
         let ArmourySystemData: ArmourySystemSaveData | null = null
 
@@ -63,7 +67,7 @@ namespace TheGrailLordsOfBretonnia {
         export function RegisterSubtypeAgent(agentKeys: string[]) {
             for (const agentKey of agentKeys) {
                 WhitelistedSubAgentKeys.add(agentKey)
-                if(!AnciliaryIncompatibilities.has(agentKey)) AnciliaryIncompatibilities.set(agentKey, new Set<string>())   
+                if(!AgentSubtypeAnciliaryIncompatibilities.has(agentKey)) AgentSubtypeAnciliaryIncompatibilities.set(agentKey, new Set<string>())   
             }
         }
 
@@ -97,16 +101,33 @@ namespace TheGrailLordsOfBretonnia {
             }
         }
 
+        export function RegisterCape(registerAncillaryKeys: AnciliaryKeyToAssetId[]) {
+            for (const iterator of registerAncillaryKeys) {
+                AnciliaryCapeKeys.add(iterator)
+            }
+        }
+
         export function MakeThisItemIncompatibleWithAgent(subagentKey: string, anciliaries: string[]) {            
-            let compat = AnciliaryIncompatibilities.get(subagentKey)
+            let compat = AgentSubtypeAnciliaryIncompatibilities.get(subagentKey)
             if(compat == null) {
                compat = new Set<string>()
-               AnciliaryIncompatibilities.set(subagentKey, compat) 
+               AgentSubtypeAnciliaryIncompatibilities.set(subagentKey, compat) 
             }
             for (const anciliary of anciliaries) {
                 compat.add(anciliary)
             }             
            
+        }
+
+        export function MakeThisItemIncompatibleWithItems(anciliaryKey: string, anciliaries: string[]) {
+            let compat = ConflictingAnciliaries.get(anciliaryKey)
+            if(compat == null) {
+               compat = new Set<string>()
+               ConflictingAnciliaries.set(anciliaryKey, compat) 
+            }
+            for (const anciliary of anciliaries) {
+                compat.add(anciliary)
+            }
         }
         
         export function Initialise() {
@@ -211,6 +232,7 @@ namespace TheGrailLordsOfBretonnia {
                 if(value.HelmetId == "") return [false, `HelmetId is empty for ${key}`]
                 if(value.ShieldId == "") return [false, `ShieldId is empty for ${key}`]
                 if(value.WeaponId == "") return [false, `WeaponId is empty for ${key}`]
+                if(value.CapeId == "") return [false, `CapeId is empty for ${key}`]
             }
 
             return [true, "all good"]
@@ -328,16 +350,6 @@ namespace TheGrailLordsOfBretonnia {
             }
 
             return basicSet
-        }
-
-        function StringArrayIdentical(array1: string[], array2: string[]) {
-            if(array1.length != array2.length) return false
-            array1.sort()
-            array2.sort()
-            for (let i = 0; i < array1.length; i++) {
-                if(array1[i] != array2[i]) return false
-            }
-            return true
         }
 
         function ApplyTheArmours() {
@@ -465,8 +477,16 @@ namespace TheGrailLordsOfBretonnia {
             return shieldId.assetId
         }
 
+        function GetCapeId(agentSubtype: string, anciliariesKeys: string[]): string | null {
+            const knownCapes = Array.from(AnciliaryCapeKeys)
+            const capeId = knownCapes.find( knownCape => anciliariesKeys.includes(knownCape.anciliaryKey) && knownCape.subtypeAgentKey == agentSubtype )
+            
+            if(!capeId) return null
+            return capeId.assetId
+        }
+
         function IsItemincompatibleWithAgent(agentKey: string, anciliaryKey: string): boolean {
-            const anciliaries = AnciliaryIncompatibilities.get(agentKey)
+            const anciliaries = AgentSubtypeAnciliaryIncompatibilities.get(agentKey)
             if(anciliaries == null) return false
             const ancillariesArray = Array.from(anciliaries)
             return ancillariesArray.includes(anciliaryKey)
@@ -594,6 +614,32 @@ namespace TheGrailLordsOfBretonnia {
                 }
                 return basicArmour.WeaponId
             }
+
+            get BasicCapeId(): string {
+                if(ArmourySystemData == null) {
+                    logger.LogError(`BasicShieldId: ArmourySystemData is null and not initialised`)
+                    throw(`getter FaceId failed`)
+                }
+    
+                const basicArmour = GetBasicSetFromArmourySystemData(this)
+                if(basicArmour == null) {
+                    logger.LogError(`BasicShieldId: Armoury system is not applied to this character ${this.CqiNo} ${this.LocalisedFullName}`)
+                    throw(`getter BasicShieldId failed`)
+                }
+                return basicArmour.CapeId
+            }
+
+            private UnequipConflictingItems() {
+                const anciliaries = this.AnciliaryKeys
+                const incompatible = []
+                for (const anciliary of anciliaries) {
+                    if(ConflictingAnciliaries.has(anciliary)) {
+                        incompatible.push(anciliary)
+                        this.RemoveAnciliary(anciliary, true, true)
+                    }
+                }
+                return incompatible
+            }
             
             private UnequipDoubleItems() {
                 const anciliaries = this.AnciliaryKeys
@@ -621,6 +667,17 @@ namespace TheGrailLordsOfBretonnia {
                     }
                 }
 
+                const capeAncilliaryKeys = Array.from(AnciliaryCapeKeys).filter( 
+                    ancillaryCape => anciliaries.includes(ancillaryCape.anciliaryKey) && 
+                                    ancillaryCape.subtypeAgentKey == this.SubtypeKey )
+                if(capeAncilliaryKeys.length > 1) {
+                    const firstItem = capeAncilliaryKeys[0]
+                    for (const anciliary of capeAncilliaryKeys) {
+                        if(anciliary != firstItem) {
+                            this.RemoveAnciliary(anciliary.anciliaryKey, true, true)                            
+                        }
+                    }
+                }
                 //capes
             }
 
@@ -653,14 +710,24 @@ namespace TheGrailLordsOfBretonnia {
             WearArmour() {        
                 this.UnequipDoubleItems()        
                 const incompatibleItems = this.UnequipIncompatibleItems()
+                const conflictingItems = this.UnequipConflictingItems()
                 setTimeout(() => {
                     if(incompatibleItems.length > 0 && 
-                        this.Faction.IsHuman && 
+                        this.Faction.IsHumanTurn && 
                         IsCharacterScreenBeingDisplayed()) {
                         const sentence = `This item is not compatible with this character: ${incompatibleItems[0]}`
                         console.warn(`This item is not compatible with this character: ${incompatibleItems[0]}`)
                         alert(sentence)
-                    } 
+                    }
+                }, 300)
+                setTimeout(() => {
+                    if(conflictingItems.length > 0 && 
+                       this.Faction.IsHumanTurn && 
+                       IsCharacterScreenBeingDisplayed()) {
+                       const sentence  = `This item ${conflictingItems[0]} is conflicting with some of your equipped items`
+                       console.warn(`This item ${conflictingItems[0]} with some of your equipped items`)
+                       alert(sentence)
+                    }
                 }, 300)
                 const variantMeshId = this.GetVariantMeshId()
                 logger.LogWarn(`this character ${this.CqiNo} ${this.LocalisedFullName} will use ${variantMeshId}`)
@@ -675,8 +742,9 @@ namespace TheGrailLordsOfBretonnia {
                 const armourId = GetArmourId(this.SubtypeKey, this.AnciliaryKeys) ?? this.BasicArmourId
                 const weaponId = GetWeaponId(this.SubtypeKey, this.AnciliaryKeys) ?? this.BasicWeaponId
                 const shieldId = GetShieldId(this.SubtypeKey, this.AnciliaryKeys) ?? this.BasicShieldId
+                const capeId   = GetCapeId(this.SubtypeKey, this.AnciliaryKeys) ?? this.BasicCapeId
                 
-                return `ArmourySystem__${FaceId}__${helmetId}__${armourId}__${weaponId}__${shieldId}`
+                return `ArmourySystem__${FaceId}__${helmetId}__${armourId}__${weaponId}__${shieldId}__${capeId}`
             }
     
             CanUseShield(): boolean {

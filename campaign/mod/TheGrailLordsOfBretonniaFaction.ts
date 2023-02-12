@@ -238,6 +238,16 @@ namespace TheGrailLordsOfBretonnia {
             return this.factionInterface.name()
         }
 
+        /** (getter) returns true if this faction is currently on its turn */
+        public get IsCurrentTurn(): boolean {
+            return  cm.is_factions_turn_by_key(this.FactionKey)
+        }
+
+        /** (Getter) returns true if local human faction (the human who currently control his faction on turn) */
+        public get IsHumanTurn() : boolean {
+            return this.IsHuman && this.IsCurrentTurn
+        }
+
         public toString(): string {
             return this.FactionKey
         }

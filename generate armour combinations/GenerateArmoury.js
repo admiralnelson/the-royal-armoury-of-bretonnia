@@ -491,7 +491,7 @@ function GenerateCombinations() {
 
     function IsCapeCompatible(faceId, capeIdToSearch) {
         if(capeIdToSearch == "NONE") return true
-        const faceIdx = basicSet.CapeId.indexOf(faceId)
+        const faceIdx = basicSet.FaceId.indexOf(faceId)
         const capeId = basicSet.CapeId[faceIdx]
         if(capeIdToSearch == capeId) return true
 
@@ -772,7 +772,8 @@ function GenerateVariantMeshDefinitions() {
             HelmetId: split[2],
             ArmourId: split[3],
             WeaponId: split[4],
-            ShieldId: split[5]
+            ShieldId: split[5],
+            CapeId: split[6]
         }
         if(!AVAILABLE_ASSETS[components.FaceId]) {
             throw(`${components.FaceId} is not defined in AssetIdsToTheActualAssetFilename.csv`)
@@ -788,6 +789,9 @@ function GenerateVariantMeshDefinitions() {
         }
         if(!AVAILABLE_ASSETS[components.ShieldId]) {
             throw(`${components.ShieldId} is not defined in AssetIdsToTheActualAssetFilename.csv`)
+        }
+        if(!AVAILABLE_ASSETS[components.CapeId]) {
+            throw(`${components.CapeId} is not defined in AssetIdsToTheActualAssetFilename.csv`)
         }
 
         const twoHandedWeapon = (components.ShieldId == "NONE") ? AVAILABLE_ASSETS[components.WeaponId] : ""
@@ -806,6 +810,9 @@ function GenerateVariantMeshDefinitions() {
     </SLOT>
     <SLOT name="crest" >
         <VARIANT_MESH model="${AVAILABLE_ASSETS[components.HelmetId]}" />
+    </SLOT>
+    <SLOT name="cape">
+        <VARIANT_MESH model="${AVAILABLE_ASSETS[components.CapeId]}"/>
     </SLOT>
     <SLOT name="body" >
         <VARIANT_MESH model="${AVAILABLE_ASSETS[components.ArmourId]}">

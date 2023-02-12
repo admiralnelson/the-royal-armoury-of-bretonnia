@@ -69,6 +69,12 @@ namespace TheGrailLordsOfBretonnia {
 
                 `wh_dlc07_anc_weapon_sword_of_the_ladys_champion`,
                 `wh_dlc07_anc_weapon_sword_of_the_ladys_champion`,
+
+                `admiralnelson_the_cape_of_kings_champion_cape_anciliary_key`,
+                `admiralnelson_the_cape_of_the_lady_favor_cape_anciliary_key`,
+
+                `admiralnelson_the_cape_of_kings_champion_cape_anciliary_key`,
+                `admiralnelson_the_cape_of_the_lady_favor_cape_anciliary_key`,
             ]
 
             for (const item of anciliariesTest) {
@@ -91,35 +97,6 @@ namespace TheGrailLordsOfBretonnia {
                     // alert(char, () => {
                     //     lord.ChangeModelAppearance(`admiralnelson_brt_generic_lord_massif_sword_shield_art_key_1`)
                     // })
-                } 
-            })
-
-            new Lord({
-                factionKey: "wh_main_brt_bretonnia",
-                agentKey: "admiralnelson_bret_lord_massif_sword_shield_agent_key",
-                regionKey: faction.FactionLeader?.CurrentRegionKey,
-                lordCreatedCallback: (lord) => {
-                    console.log(`ok`)
-                } 
-            })
-
-            new Lord({
-                factionKey: "wh_main_brt_bretonnia",
-                agentKey: "admiralnelson_bret_lord_massif_agent_key",
-                regionKey: faction.FactionLeader?.CurrentRegionKey,
-                lordCreatedCallback: (lord) => {
-                    console.log(`ok`)
-                } 
-            })
-
-            new Lord({
-                factionKey: "wh_main_brt_bretonnia",
-                agentKey: "admiralnelson_bret_lord_massif_agent_key",
-                regionKey: faction.FactionLeader?.CurrentRegionKey,
-                lordCreatedCallback: (lord) => {
-                    console.log(`ok`)
-                    const armouredLord = ArmourySystem.CastToArmouredCharacter(lord)
-                    if(armouredLord) armouredLord.ChangeBasicAppearance(`UI/Portraits/Portholes/admiralnelson/bret_lord_massif_4.png`)
                 } 
             })
 

@@ -1,0 +1,2 @@
+node GenerateArmoury.js
+pause
