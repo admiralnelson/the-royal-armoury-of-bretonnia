@@ -188,4 +188,17 @@ interface IUIComponent {
      * @param y Y co-ordinate of click on component. Default null
      */
     SimulateLClick(x?:number, y?:number): void
+    /**
+     * Returns whether this uicomponent is interactive or not. Non-interactive uicomponents do not respond to any mouse events.
+     */
+    IsInteractive(): boolean
+    /**
+     * Sets this uicomponent to be interactive or not. Non-interactive uicomponents do not respond to any mouse events.
+     * @param isInteractive 
+     */
+    SetInteractive(isInteractive: boolean): void
+    /**
+     * Returns whether or not the mouse cursor is currently over this uicomponent or any of its children.
+     */
+    IsMouseOverChildren(): boolean
 }

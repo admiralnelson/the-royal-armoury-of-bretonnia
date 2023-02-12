@@ -1181,6 +1181,11 @@ This function can also reposition the camera, so it's best used on game creation
      * @returns any item was successfully equipped
      */
     add_armory_item_set_to_character(characterObject: ICharacterScript, itemSetKey: string, equipDefault: boolean, clearConflictingItem: boolean): boolean
+    /**
+     * Returns true if it's the supplied faction turn. The faction is specified by key.
+     * @param factionKey Faction key, from the factions database table.
+     */
+    is_factions_turn_by_key(factionKey: string): boolean
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
