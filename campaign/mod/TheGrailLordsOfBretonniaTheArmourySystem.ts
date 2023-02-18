@@ -248,6 +248,7 @@ namespace TheGrailLordsOfBretonnia {
                 Version: VERSION,
                 CqiToAssociatedBasicSet: [],
             }
+            logger.LogWarn(`Starting new game.`)
             SaveData()
             return true
         }
@@ -291,7 +292,7 @@ namespace TheGrailLordsOfBretonnia {
                 if(data == null) return false
 
                 ArmourySystemData = JSON.parse(data)
-
+                logger.LogWarn(`Data loaded: ${data}`)
             } catch (error) {
                 logger.LogError(`failed to load saved Armoury Data. Save game is toasted reason: ${error}`)
                 return false
@@ -648,6 +649,31 @@ namespace TheGrailLordsOfBretonnia {
             
             private UnequipDoubleItems() {
                 const anciliaries = this.AnciliaryKeys
+
+                const armourAnciliaries = Array.from(AnciliaryArmourKeys).filter( 
+                    anciliaryArmour => anciliaries.includes(anciliaryArmour.anciliaryKey) && 
+                                       anciliaryArmour.subtypeAgentKey == this.SubtypeKey )
+                if(armourAnciliaries.length > 1) {
+                    const firstItem = armourAnciliaries[0]
+                    for (const anciliary of armourAnciliaries) {
+                        if(anciliary != firstItem) {
+                            this.RemoveAnciliary(anciliary.anciliaryKey, true, true)
+                        }
+                    }
+                }
+
+                const weaponAnciliaries = Array.from(AnciliaryWeaponKeys).filter( 
+                    anciliaryWeapon => anciliaries.includes(anciliaryWeapon.anciliaryKey) && 
+                                       anciliaryWeapon.subtypeAgentKey == this.SubtypeKey )
+                if(weaponAnciliaries.length > 1) {
+                    const firstItem = weaponAnciliaries[0]
+                    for (const anciliary of weaponAnciliaries) {
+                        if(anciliary != firstItem) {
+                            this.RemoveAnciliary(anciliary.anciliaryKey, true, true)
+                        }
+                    }
+                }
+
                 const helmetAncilliaries = Array.from(AnciliaryHelmetKeys).filter( 
                     ancillaryHelmet => anciliaries.includes(ancillaryHelmet.anciliaryKey) && 
                                        ancillaryHelmet.subtypeAgentKey == this.SubtypeKey )
@@ -683,7 +709,6 @@ namespace TheGrailLordsOfBretonnia {
                         }
                     }
                 }
-                //capes
             }
 
             private UnequipIncompatibleItems() {
