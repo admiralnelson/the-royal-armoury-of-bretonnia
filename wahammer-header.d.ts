@@ -1186,6 +1186,11 @@ This function can also reposition the camera, so it's best used on game creation
      * @param factionKey Faction key, from the factions database table.
      */
     is_factions_turn_by_key(factionKey: string): boolean
+    /**
+     * Override the battle environment of upcoming battles. This needs to be cleared by calling it without any parameters.
+     * @param enviromentGroupFileName The file path of the battle environment file. E.g. "weather/battle/wh_day_clear_02.environment_group"
+     */
+    set_battle_lighting_env_override(enviromentGroupFileName?: string): void
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
