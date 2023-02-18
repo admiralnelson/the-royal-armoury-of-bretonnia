@@ -16,6 +16,10 @@ try {
     fs.mkdirSync("temp")
 } catch (error) {}
 
+if(fs.existsSync("/build")) {
+    fs.rmSync("/build", { recursive: true })
+}
+
 if(!fs.existsSync("graphics_assets.pack")) {
     throw `cannot pack! graphics_assets.pack was not found`
 }
