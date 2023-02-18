@@ -54,6 +54,8 @@ namespace TheGrailLordsOfBretonnia {
 
         let ArmourySystemData: ArmourySystemSaveData | null = null
 
+        const LoadingTime = PerformanceCounterBegin()
+
         export function CastToArmouredCharacter(character: Character): IArmouredCharacter | undefined {
             return FindArmouredCharacter(character)
         }
@@ -203,6 +205,7 @@ namespace TheGrailLordsOfBretonnia {
 
                 OnTurnEnds()
                 OnAnciliaryGainedByCharacter()
+                logger.LogWarn(`PERFORMANCE REPORT: loading took ${PerformanceCounterEnd() - LoadingTime} ms`)
                 return true   
             } catch (error) {
                 alert(`Failed to initialise the armoury system!\nYour campaign is probably toased. Please see the console log!\nReason: ${error}`)
@@ -353,10 +356,11 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         function ApplyTheArmours() {
+            const time = PerformanceCounterBegin()
             for (const armouredCharacter of ArmouredCharacters) {
                 armouredCharacter.WearArmour()
-            }
-            logger.Log(`ApplyTheArmours OK`)
+            }            
+            logger.Log(`ApplyTheArmours OK. Operation took ${PerformanceCounterEnd() - time} ms`)
         }
 
         function SetupOnCharacterSpawnApplyArmourSystem() {
@@ -537,7 +541,8 @@ namespace TheGrailLordsOfBretonnia {
         class ArmouredCharacter extends Character implements IArmouredCharacter {
 
             private DoNotRemoveItemsWithKeywords = ["mount", "warhorse", "hippogrif", "pegasus"]
-
+            private currentVariantMeshId = ""
+            
             constructor(character: Character) {
                 super({
                     characterObject: character.GetInternalInterface()
@@ -730,10 +735,13 @@ namespace TheGrailLordsOfBretonnia {
                     }
                 }, 300)
                 const variantMeshId = this.GetVariantMeshId()
-                logger.LogWarn(`this character ${this.CqiNo} ${this.LocalisedFullName} will use ${variantMeshId}`)
-                logger.LogWarn(`this character anciliaries ${JSON.stringify(this.AnciliaryKeys)}`)
                 //the magic goes here:
-                this.ChangeModelAppearance(variantMeshId)
+                if(variantMeshId != this.currentVariantMeshId) {
+                    this.currentVariantMeshId = variantMeshId
+                    this.ChangeModelAppearance(variantMeshId)
+                    logger.LogWarn(`this character ${this.CqiNo} ${this.LocalisedFullName} will use ${variantMeshId}`)
+                    logger.LogWarn(`this character anciliaries ${JSON.stringify(this.AnciliaryKeys)}`)
+                }
             }
     
             GetVariantMeshId(): string {

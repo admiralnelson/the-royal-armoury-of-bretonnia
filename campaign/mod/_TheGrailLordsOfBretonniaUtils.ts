@@ -108,6 +108,29 @@ namespace TheGrailLordsOfBretonnia {
         return cm.turn_number()
     }
 
+    /**
+     * Override the battle environment of upcoming battles.
+     * @param fileName 	The file path of the battle environment file. E.g. "weather/battle/wh_day_clear_02.environment_group"
+     */
+    export function SetBattleLightingOverride(fileName: string): void {
+        cm.set_battle_lighting_env_override(fileName)
+    }
+
+    /**
+     * Clears battle ligthing settings.
+     */
+    export function ClearBattleLightingOverride(): void {
+        cm.set_battle_lighting_env_override()
+    }
+
+    export function PerformanceCounterBegin(): number {
+        return os.clock() * 1000
+    }
+
+    export function PerformanceCounterEnd(): number {
+        return os.clock() * 1000
+    }
+
     class TimedCallback {
         private id = 0
         private interval = 0
