@@ -113,6 +113,20 @@ namespace TheGrailLordsOfBretonnia {
                 `admiralnelson_gilded_sallet_lordly_padded_helmet_anciliary_key`,
                 `admiralnelson_gilded_sallet_lordly_padded_helmet_crown_anciliary_key`,
 
+                `admiralnelson_gilded_sallet_lordly_padded_helmet_crown_anciliary_key`,
+                `admiralnelson_gilded_bascinet_helmet_anciliary_key`,
+                `admiralnelson_gilded_bascinet_pigface_guard_helmet_anciliary_key`,
+                `admiralnelson_massif_great_helmet_feathers_helmet_anciliary_key`,
+                `admiralnelson_great_helmet_grail_helmet_anciliary_key`,
+                `admiralnelson_great_helmet_helmet_anciliary_key`,
+                `admiralnelson_great_helmet_unicorn_helmet_anciliary_key`,
+                `wh_main_anc_armour_helm_of_discord`,
+                `wh_main_anc_armour_helm_of_discord`,
+                `wh_main_anc_armour_helm_of_discord`,
+
+                `admiralnelson_chainmail_gilded_helmet_with_flaptop_crest_helmet_anciliary_key`,
+                `admiralnelson_chainmail_gilded_minor_flaptop_helmet_anciliary_key`,
+                `admiralnelson_chainmail_helmet_with_flaptop_helmet_anciliary_key`
             ]
 
             for (const item of anciliariesTest) {

@@ -639,9 +639,14 @@ namespace TheGrailLordsOfBretonnia {
                 const anciliaries = this.AnciliaryKeys
                 const incompatible = []
                 for (const anciliary of anciliaries) {
-                    if(ConflictingAnciliaries.has(anciliary)) {
-                        incompatible.push(anciliary)
-                        this.RemoveAnciliary(anciliary, true, true)
+                    const conflictedAnciliary = ConflictingAnciliaries.get(anciliary)
+                    if(conflictedAnciliary != null) {
+                        const whatAnciliariesAreNotCompat = Array.from(conflictedAnciliary.values())
+                        const intersections = whatAnciliariesAreNotCompat.filter( incompatibleAncies => anciliaries.includes(incompatibleAncies) )
+                        if(intersections.length > 0) {
+                            incompatible.push(anciliary)
+                            this.RemoveAnciliary(anciliary, true, true)
+                        }
                     }
                 }
                 return incompatible
