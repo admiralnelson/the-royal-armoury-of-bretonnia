@@ -144,7 +144,6 @@ function InjectResourcesPack() {
 
     console.log(`injecting items.pack`)
 
-    console.log(`injecting graphical assets`)
     const result = spawnSync(`node.exe`,[
         `UpdateItems.js`
     ], {
