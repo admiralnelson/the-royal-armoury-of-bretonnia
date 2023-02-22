@@ -51,82 +51,35 @@ namespace TheGrailLordsOfBretonnia {
                 `wh_main_anc_follower_bretonnia_squire`,
                 `wh_main_anc_follower_empire_estalian_diestro`,
                 
-                `admiralnelson_dragon_helmet_anciliary_key`,
-                `admiralnelson_dragon_helmet_anciliary_key`,
-                `admiralnelson_dragon_helmet_anciliary_key`,
-
-                `admiralnelson_bascinet_helmet_anciliary_key`,
-                `admiralnelson_bascinet_helmet_anciliary_key`,
-                
-                `admiralnelson_feathered_helmet_anciliary_key`,
-                `admiralnelson_feathered_helmet_anciliary_key`,
-                `admiralnelson_the_ladys_ward_shield_ancillary_key`,
+                `admiralnelson_debug_naked_armour_anciliary_key`,
                 `admiralnelson_the_ladys_ward_shield_ancillary_key`,
                 `admiralnelson_the_unbreakable_wall_shield_anciliary_key`,
-                `admiralnelson_the_unbreakable_wall_shield_anciliary_key`,
                 `admiralnelson_bane_of_the_undead_axe_weapon_ancillary_key`,
-                `admiralnelson_bane_of_the_undead_axe_weapon_ancillary_key`,
-
-                `wh_dlc07_anc_weapon_sword_of_the_ladys_champion`,
-                `wh_dlc07_anc_weapon_sword_of_the_ladys_champion`,
-                
                 `admiralnelson_the_cape_of_kings_champion_cape_anciliary_key`,
-                `admiralnelson_the_cape_of_the_lady_favor_cape_anciliary_key`,
-
-                `admiralnelson_the_cape_of_kings_champion_cape_anciliary_key`,
-                `admiralnelson_the_cape_of_the_lady_favor_cape_anciliary_key`,
-
-                `admiralnelson_armour_1_armour_anciliary_key`,
-                `admiralnelson_armour_2_armour_anciliary_key`,
-                `admiralnelson_armour_3_armour_anciliary_key`,
-                `admiralnelson_armour_4_armour_anciliary_key`,
-                `admiralnelson_armour_5_armour_anciliary_key`,
-                `admiralnelson_armour_6_armour_anciliary_key`,
-                `admiralnelson_armour_7_armour_anciliary_key`,
-                `admiralnelson_armour_8_armour_anciliary_key`,
-                `admiralnelson_armour_9_armour_anciliary_key`,
-                `admiralnelson_armour_10_armour_anciliary_key`,
-
-
-
                 `admiralnelson_the_cape_of_the_lady_favor_cape_anciliary_key`,
                 `admiralnelson_the_cape_of_the_lady_favor_cape_2_anciliary_key`,
-                `admiralnelson_the_cape_of_the_lady_favor_cape_3_anciliary_key`,
-                `admiralnelson_the_cape_of_the_lady_favor_cape_4_anciliary_key`,
-
-                `admiralnelson_debug_naked_armour_anciliary_key`,
-
+                `admiralnelson_armour_1_armour_anciliary_key`,
+                `admiralnelson_armour_4_armour_anciliary_key`,
+                `admiralnelson_armour_7_armour_anciliary_key`,
+                `admiralnelson_armour_8_armour_anciliary_key`,
                 `admiralnelson_bascinet_closed_crest_pegasus_helmet_anciliary_key`,
                 `admiralnelson_basic_gilded_sallet_helmet_anciliary_key`,
-                `admiralnelson_chainmail_basic_helmet`,
-                `admiralnelson_dragonhelm_2_helmet_anciliary_key`,
                 `admiralnelson_dragonhelm_helmet_anciliary_key`,
                 `admiralnelson_feathered_closed_with_crest_antler_pegasus_helmet_anciliary_key`,
-                `admiralnelson_feathered_helmet_anciliary_key`,
-                `admiralnelson_feathered_with_crest_antler_helmet_anciliary_key`,
                 `admiralnelson_feathered_with_crest_antler_lady_helmet_anciliary_key`,
                 `admiralnelson_generic_bascinet_helmet_anciliary_key`,
                 `admiralnelson_gilded_sallet_crest_guard_closed_helmet_anciliary_key`,
                 `admiralnelson_gilded_sallet_crest_helmet_anciliary_key`,
-                `admiralnelson_gilded_sallet_guard_helmet_anciliary_key`,
                 `admiralnelson_gilded_sallet_guard_helmet_crest_more_feathers_anciliary_key`,
                 `admiralnelson_gilded_sallet_lordly_padded_helmet_anciliary_key`,
-                `admiralnelson_gilded_sallet_lordly_padded_helmet_crown_anciliary_key`,
-
-                `admiralnelson_gilded_sallet_lordly_padded_helmet_crown_anciliary_key`,
                 `admiralnelson_gilded_bascinet_helmet_anciliary_key`,
                 `admiralnelson_gilded_bascinet_pigface_guard_helmet_anciliary_key`,
-                `admiralnelson_massif_great_helmet_feathers_helmet_anciliary_key`,
-                `admiralnelson_great_helmet_grail_helmet_anciliary_key`,
-                `admiralnelson_great_helmet_helmet_anciliary_key`,
-                `admiralnelson_great_helmet_unicorn_helmet_anciliary_key`,
-                `wh_main_anc_armour_helm_of_discord`,
-                `wh_main_anc_armour_helm_of_discord`,
-                `wh_main_anc_armour_helm_of_discord`,
-
+                `admiralnelson_great_helmet_feathers_helmet_anciliary_key`,
                 `admiralnelson_chainmail_gilded_helmet_with_flaptop_crest_helmet_anciliary_key`,
-                `admiralnelson_chainmail_gilded_minor_flaptop_helmet_anciliary_key`,
-                `admiralnelson_chainmail_helmet_with_flaptop_helmet_anciliary_key`
+                `admiralnelson_kite_shield_ancillary_key`,
+                `admiralnelson_norman_cross_shield_ancillary_key`,
+                `admiralnelson_norman_pattern_1_shield_ancillary_key`,
+                `admiralnelson_norman_reinforced_cross_shield_ancillary_key`,
             ]
 
             for (const item of anciliariesTest) {

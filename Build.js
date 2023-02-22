@@ -122,7 +122,10 @@ function CompileVariantMesh(folderName) {
 
 function BuildTypescriptProject() {
     console.log(`compiling typescript project`)
-    fs.rmSync(`script/`, { recursive: true })
+    try {
+        fs.rmSync(`script/`, { recursive: true })
+    } catch (error) { }
+    
     const result = spawnSync(`build_campaign.bat`, [], {
         stdio: "inherit",
         encoding: 'utf8'
