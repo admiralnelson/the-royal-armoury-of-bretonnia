@@ -80,6 +80,9 @@ namespace TheGrailLordsOfBretonnia {
                 `admiralnelson_norman_cross_shield_ancillary_key`,
                 `admiralnelson_norman_pattern_1_shield_ancillary_key`,
                 `admiralnelson_norman_reinforced_cross_shield_ancillary_key`,
+
+                `admiralnelson_enchanted_2handed_mace_ancillary_key`,
+                `admiralnelson_enchanted_2handed_warhammer_mace_ancillary_key`
             ]
 
             for (const item of anciliariesTest) {
