@@ -430,7 +430,6 @@ function GenerateCombinations() {
     console.log(`Compiling csvs...`)
     console.time('GenerateCombinations')
     const basicSet = GetBasicArmourSet()
-    const basicCombinations = GenerateBasicArmourySetIds()
 
     const helmets = GetHelmets().HelmetId.concat(basicSet.HelmetId)
     const helmetsAndSubtype = GetHelmets()
@@ -443,7 +442,13 @@ function GenerateCombinations() {
     const capes = GetCapes().CapeId.concat(basicSet.CapeId)
     const capesAndSubtype = GetCapes()
 
+    const weaponCompatibleCache = {}
     function IsWeaponCompatible(faceId, weaponIdToSearch) {
+        if(weaponCompatibleCache[faceId] && weaponCompatibleCache[faceId][weaponIdToSearch]) 
+            return true
+        if(weaponCompatibleCache[faceId] && weaponCompatibleCache[faceId][weaponIdToSearch] == false)
+            return false
+
         const faceIdx = basicSet.FaceId.indexOf(faceId)
         const basicWeaponId = basicSet.WeaponId[faceIdx]
         if(weaponIdToSearch == basicWeaponId) return true
@@ -452,12 +457,25 @@ function GenerateCombinations() {
         for (let i = 0; i < weaponsAndSubtype.AgentSubType.length; i++) {
             const agentSubtypeWeapon = weaponsAndSubtype.AgentSubType[i]
             const weaponId = weaponsAndSubtype.WeaponId[i]
-            if(agentSubtypeWeapon == AgentSubType && weaponId == weaponIdToSearch) return true
+            if(agentSubtypeWeapon == AgentSubType && weaponId == weaponIdToSearch) {
+                weaponCompatibleCache[faceId] = {}
+                weaponCompatibleCache[faceId][weaponIdToSearch] = true
+                return true
+            }
         }
+        weaponCompatibleCache[faceId] = {}
+        weaponCompatibleCache[faceId][weaponIdToSearch] = false
         return false
     }
 
+    
+    const armourCompatibleCache = {}
     function IsArmourCompatible(faceId, armourIdToSearch) {
+        if(armourCompatibleCache[faceId] && armourCompatibleCache[faceId][armourIdToSearch]) 
+            return true
+        if(armourCompatibleCache[faceId] && armourCompatibleCache[faceId][armourIdToSearch] == false)
+            return false
+
         const faceIdx = basicSet.FaceId.indexOf(faceId)
         const armourId = basicSet.ArmourId[faceIdx]
         if(armourIdToSearch == armourId) return true
@@ -466,12 +484,24 @@ function GenerateCombinations() {
         for (let i = 0; i < armoursAndSubtype.AgentSubType.length; i++) {
             const agentSubtypeArmour = armoursAndSubtype.AgentSubType[i]
             const armourId = armoursAndSubtype.ArmourId[i]
-            if(agentSubtypeArmour == AgentSubType && armourId == armourIdToSearch) return true
+            if(agentSubtypeArmour == AgentSubType && armourId == armourIdToSearch)  {
+                armourCompatibleCache[faceId] = {}
+                armourCompatibleCache[faceId][armourIdToSearch] = true
+                return true
+            }
         }
+        armourCompatibleCache[faceId] = {}
+        armourCompatibleCache[faceId][armourIdToSearch] = false
         return false
     }
 
+    const helmetCompatibleCache = {}
     function IsHelmetCompatible(faceId, helmetIdToSearch) {
+        if(helmetCompatibleCache[faceId] && helmetCompatibleCache[faceId][helmetIdToSearch]) 
+            return true
+        if(helmetCompatibleCache[faceId] && helmetCompatibleCache[faceId][helmetIdToSearch] == false)
+            return false
+
         const faceIdx = basicSet.FaceId.indexOf(faceId)
         const helmetId = basicSet.HelmetId[faceIdx]
         if(helmetIdToSearch == helmetId) return true
@@ -480,12 +510,24 @@ function GenerateCombinations() {
         for (let i = 0; i < helmetsAndSubtype.AgentSubType.length; i++) {
             const agentSubtypeHelmet = helmetsAndSubtype.AgentSubType[i]
             const helmetId = helmetsAndSubtype.HelmetId[i]
-            if(agentSubtypeHelmet == AgentSubType && helmetId == helmetIdToSearch) return true
-        }
+            if(agentSubtypeHelmet == AgentSubType && helmetId == helmetIdToSearch) {
+                helmetCompatibleCache[faceId] = {}
+                helmetCompatibleCache[faceId][helmetIdToSearch] = true
+                return true
+            }
+        }        
+        helmetCompatibleCache[faceId] = {}
+        helmetCompatibleCache[faceId][helmetIdToSearch] = false
         return false
     }
 
+    const shieldCompatibleCache = {}
     function IsShieldCompatible(faceId, shieldIdToSearch) {
+        if(shieldCompatibleCache[faceId] && shieldCompatibleCache[faceId][shieldIdToSearch]) 
+            return true
+        if(shieldCompatibleCache[faceId] && shieldCompatibleCache[faceId][shieldIdToSearch] == false)
+            return false
+            
         if(!IsAgentSupportShield(faceId)) return false
         if(shieldIdToSearch == "NONE") return false
 
@@ -497,8 +539,14 @@ function GenerateCombinations() {
         for (let i = 0; i < shieldsAndSubtype.AgentSubType.length; i++) {
             const agentSubtypeShield = shieldsAndSubtype.AgentSubType[i]
             const shieldId = shieldsAndSubtype.ShieldId[i]
-            if(agentSubtypeShield == AgentSubType && shieldId == shieldIdToSearch) return true
+            if(agentSubtypeShield == AgentSubType && shieldId == shieldIdToSearch)  {
+                shieldCompatibleCache[faceId] = {}
+                shieldCompatibleCache[faceId][shieldIdToSearch] = true
+                return true
+            }
         }
+        shieldCompatibleCache[faceId] = {}
+        shieldCompatibleCache[faceId][shieldIdToSearch] = false
         return false
     }
 
@@ -508,7 +556,13 @@ function GenerateCombinations() {
         
     }
 
+    const capeCompatibleCache = {}
     function IsCapeCompatible(faceId, capeIdToSearch) {
+        if(capeCompatibleCache[faceId] && capeCompatibleCache[faceId][capeIdToSearch]) 
+            return true
+        if(capeCompatibleCache[faceId] && capeCompatibleCache[faceId][capeIdToSearch] == false)
+            return false
+
         if(capeIdToSearch == "NONE") return true
         const faceIdx = basicSet.FaceId.indexOf(faceId)
         const capeId = basicSet.CapeId[faceIdx]
@@ -518,8 +572,14 @@ function GenerateCombinations() {
         for (let i = 0; i < capesAndSubtype.AgentSubType.length; i++) {
             const agentSubtypeCape = capesAndSubtype.AgentSubType[i]
             const capeId = capesAndSubtype.CapeId[i]
-            if(agentSubtypeCape == AgentSubType && capeId == capeIdToSearch) return true
+            if(agentSubtypeCape == AgentSubType && capeId == capeIdToSearch) {
+                capeCompatibleCache[faceId] = {}
+                capeCompatibleCache[faceId][capeIdToSearch] = true
+                return true
+            }
         }
+        capeCompatibleCache[faceId] = {}
+        capeCompatibleCache[faceId][capeIdToSearch] = false
         return false
     }
 
@@ -530,32 +590,28 @@ function GenerateCombinations() {
         for (const helmet of helmets) {
             if(!IsHelmetCompatible(face, helmet)) {
                 totalPruned++
-                process.stdout.write(`\rProcessing: ${counter}. Pruned: ${totalPruned}...`)
                 continue
             }
 
             for (const armour of armours) {
                 if(!IsArmourCompatible(face, armour)) {
                     totalPruned++
-                    process.stdout.write(`\rProcessing: ${counter}. Pruned: ${totalPruned}. . .`)
                     continue
                 }
 
-                for (const weapon of weapons) {
-
-                    if(!IsWeaponCompatible(face, weapon)){
+                for (let shield of shields) {
+                    if(IsAgentSupportShield(face) && !IsShieldCompatible(face, shield)) {
                         totalPruned++
-                        process.stdout.write(`\rProcessing: ${counter}. Pruned: ${totalPruned}...`)
                         continue
                     }
-                    
-                    for (let shield of shields) {
-                        if(IsAgentSupportShield(face) && !IsShieldCompatible(face, shield)) {
-                            totalPruned++
-                            process.stdout.write(`\rProcessing: ${counter}. Pruned: ${totalPruned}. . .`)
-                            continue
-                        }
 
+                    for (const weapon of weapons) {
+
+                        if(!IsWeaponCompatible(face, weapon)){
+                            totalPruned++
+                            continue
+                        }  
+                        
                         for(const cape of capes) {
                             //check if face/subtype support shields (shield is not set to NONE in FaceAndBasicLooks.csv)
                             const isSupportsShield = IsAgentSupportShield(face)
@@ -565,12 +621,10 @@ function GenerateCombinations() {
 
                             if(!IsCapeCompatible(face, cape)) {
                                 totalPruned++
-                                process.stdout.write(`\rProcessing: ${counter}. Pruned: ${totalPruned}...`)
                                 continue
                             }
 
                             const x = `ArmourySystem__${face}__${helmet}__${armour}__${weapon}__${shield}__${cape}`
-                            if(basicCombinations.indexOf(x) >= 0) continue
                             if(result.indexOf(x) >= 0) continue
                             result.push(x)
                             counter++
@@ -928,7 +982,7 @@ function GenerateTypescriptArmouryData(projectName, factions) {
         for (const subType in subTypes) {
             for (const armour of subTypes[subType]) {
                 const anciliaryKeys = ASSET_IDS_TO_ANCILIARY_KEYS[armour]
-                if(anciliaryKeys.length == 0) {
+                if(anciliaryKeys == undefined || anciliaryKeys.length == 0) {
                     throw `AssetId ${armour} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
                 }
                 for(const anciliaryKey of anciliaryKeys) {
