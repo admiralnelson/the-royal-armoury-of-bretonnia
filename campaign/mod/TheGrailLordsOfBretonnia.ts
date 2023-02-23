@@ -81,8 +81,35 @@ namespace TheGrailLordsOfBretonnia {
                 `admiralnelson_norman_pattern_1_shield_ancillary_key`,
                 `admiralnelson_norman_reinforced_cross_shield_ancillary_key`,
 
-                `admiralnelson_enchanted_2handed_mace_ancillary_key`,
-                `admiralnelson_enchanted_2handed_warhammer_mace_ancillary_key`
+                `admiralnelson_enchanted_mace_ancillary_key`,
+                `admiralnelson_enchanted_2handed_warhammer_mace_ancillary_key`,
+                
+                `wh_dlc03_anc_weapon_the_brass_cleaver`,
+                `wh_main_anc_weapon_warrior_bane`,
+                `wh2_main_anc_weapon_executioners_axe`,
+
+                `wh2_main_anc_weapon_executioners_axe`,
+                `wh_dlc03_anc_weapon_the_brass_cleaver`,
+                `wh_main_anc_weapon_berserker_sword`,
+                `wh_main_anc_weapon_biting_blade`,
+                `wh_main_anc_weapon_giant_blade`,
+                `wh_main_anc_weapon_ogre_blade`,
+                `wh_main_anc_weapon_fencers_blades`,
+                `wh_main_anc_weapon_obsidian_blade`,
+                `wh_main_anc_weapon_gold_sigil_sword`,
+                `wh_main_anc_weapon_relic_sword`,
+
+                `wh_main_anc_weapon_shrieking_blade`,
+                `wh_main_anc_weapon_sword_of_anti-heroes`,
+                `wh_main_anc_weapon_sword_of_battle`,
+                `wh_main_anc_weapon_sword_of_bloodshed`,
+                `wh_main_anc_weapon_sword_of_might`,
+                `wh_main_anc_weapon_sword_of_strife`,
+                `wh_main_anc_weapon_sword_of_striking`,
+                `wh_main_anc_weapon_sword_of_swift_slaying`,
+                `wh_main_anc_weapon_tormentor_sword`,
+                `wh_main_anc_weapon_warrior_bane`
+
             ]
 
             for (const item of anciliariesTest) {
