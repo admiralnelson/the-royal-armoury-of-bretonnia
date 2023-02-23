@@ -12,6 +12,7 @@ function ClearFolder() {
     }
 }
 
+
 ClearFolder()
 function InitFolders() {
     console.log(`creating folders...`)
@@ -124,7 +125,10 @@ function GetAssetIdToAnciliaryKeys() {
     for (let i = 1; i < rows.length; i++) {
         const values = rows[i].split(",")
         const currentAssetId = values[0]
-        result[currentAssetId] = values[1]
+        if(result[currentAssetId] == undefined) {
+            result[currentAssetId] = []
+        }
+        result[currentAssetId].push(values[1])
     }
     
     return result
@@ -137,9 +141,11 @@ function AgentSubtypeToIncompatibleAnciliaryKey() {
     const rows = csv.split("\n")
     const result = {}
     const asset2items = GetAssetIdToAnciliaryKeys()
-    const items = []
+    const items = new Set()
     for (const key in asset2items) {
-        items.push(asset2items[key])
+        for (const item of asset2items[key]) {
+            items.add(item)
+        }
     }
     
     for (let i = 1; i < rows.length; i++) {
@@ -148,7 +154,7 @@ function AgentSubtypeToIncompatibleAnciliaryKey() {
         if(result[currentSubtype] == undefined) {
             result[currentSubtype] = []
         }
-        if(!items.includes(values[1])) 
+        if(!items.has(values[1])) 
             throw `AgentSubtypesToIncompatibleAnciliaryKeys.csv this ${values[1]} anciliary is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
         result[currentSubtype].push(values[1])
     }
@@ -905,16 +911,18 @@ function GenerateTypescriptArmouryData(projectName, factions) {
         let entries = ``
         for (const subType in subTypes) {
             for (const armour of subTypes[subType]) {
-                const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[armour]
-                if(!anciliaryKey) {
+                const anciliaryKeys = ASSET_IDS_TO_ANCILIARY_KEYS[armour]
+                if(anciliaryKeys.length == 0) {
                     throw `AssetId ${armour} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
                 }
-                const entry = `{
-                anciliaryKey: "${anciliaryKey}",
-                subtypeAgentKey: "${subType}",
-                assetId: "${armour}"
-            },`
-                entries += entry
+                for(const anciliaryKey of anciliaryKeys) {
+                    const entry = `{
+                        anciliaryKey: "${anciliaryKey}",
+                        subtypeAgentKey: "${subType}",
+                        assetId: "${armour}"
+                    },`
+                    entries += entry
+                }
             }
         }
 
@@ -926,16 +934,18 @@ function GenerateTypescriptArmouryData(projectName, factions) {
         let entries = ``
         for (const subType in subTypes) {
             for (const helmet of subTypes[subType]) {
-                const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[helmet]
-                if(!anciliaryKey) {
+                const anciliaryKeys = ASSET_IDS_TO_ANCILIARY_KEYS[helmet]
+                if(anciliaryKeys.length == 0) {
                     throw `AssetId ${helmet} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
                 }
-                const entry = `{
-                anciliaryKey: "${anciliaryKey}",
-                subtypeAgentKey: "${subType}",
-                assetId: "${helmet}"
-            },`
-                entries += entry
+                for(const anciliaryKey of anciliaryKeys) {
+                    const entry = `{
+                        anciliaryKey: "${anciliaryKey}",
+                        subtypeAgentKey: "${subType}",
+                        assetId: "${helmet}"
+                    },`
+                    entries += entry
+                }
             }
         }
 
@@ -947,16 +957,18 @@ function GenerateTypescriptArmouryData(projectName, factions) {
         let entries = ``
         for (const subType in subTypes) {
             for (const weapon of subTypes[subType]) {
-                const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[weapon]
-                if(!anciliaryKey) {
+                const anciliaryKeys = ASSET_IDS_TO_ANCILIARY_KEYS[weapon]
+                if(anciliaryKeys.length == 0) {
                     throw `AssetId ${weapon} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
                 }
-                const entry = `{
-                anciliaryKey: "${anciliaryKey}",
-                subtypeAgentKey: "${subType}",
-                assetId: "${weapon}"
-            },`
-                entries += entry
+                for(const anciliaryKey of anciliaryKeys) {
+                    const entry = `{
+                        anciliaryKey: "${anciliaryKey}",
+                        subtypeAgentKey: "${subType}",
+                        assetId: "${weapon}"
+                    },`
+                    entries += entry
+                }
             }
         }
 
@@ -968,16 +980,18 @@ function GenerateTypescriptArmouryData(projectName, factions) {
         let entries = ``
         for (const subType in subTypes) {
             for (const shield of subTypes[subType]) {
-                const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[shield]
-                if(!anciliaryKey) {
+                const anciliaryKeys = ASSET_IDS_TO_ANCILIARY_KEYS[shield]
+                if(anciliaryKeys.length == 0) {
                     throw `AssetId ${shield} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
                 }
-                const entry = `{
-                anciliaryKey: "${anciliaryKey}",
-                subtypeAgentKey: "${subType}",
-                assetId: "${shield}"
-            },`
-                entries += entry
+                for(const anciliaryKey of anciliaryKeys) {
+                    const entry = `{
+                        anciliaryKey: "${anciliaryKey}",
+                        subtypeAgentKey: "${subType}",
+                        assetId: "${shield}"
+                    },`
+                    entries += entry
+                }
             }
         }
         return entries
@@ -988,16 +1002,18 @@ function GenerateTypescriptArmouryData(projectName, factions) {
         let entries = ``
         for (const subType in subTypes) {
             for (const cape of subTypes[subType]) {
-                const anciliaryKey = ASSET_IDS_TO_ANCILIARY_KEYS[cape]
-                if(!anciliaryKey) {
+                const anciliaryKeys = ASSET_IDS_TO_ANCILIARY_KEYS[cape]
+                if(anciliaryKeys.length == 0) {
                     throw `AssetId ${cape} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
                 }
-                const entry = `{
-                anciliaryKey: "${anciliaryKey}",
-                subtypeAgentKey: "${subType}",
-                assetId: "${cape}"
-            },`
-                entries += entry
+                for(const anciliaryKey of anciliaryKeys) {
+                    const entry = `{
+                        anciliaryKey: "${anciliaryKey}",
+                        subtypeAgentKey: "${subType}",
+                        assetId: "${cape}"
+                    },`
+                    entries += entry
+                }
             }
         }
         return entries
@@ -1086,17 +1102,17 @@ namespace TheGrailLordsOfBretonnia {
     fs.writeFileSync(`autogenerated/campaign/mod/ZZZAutoGenerated_${projectName}.ts`, source)
 }
 
-const SEED_NUMBER = 0x5EEDFEED
+const SEED_NUMBER = 0x7FFEEED5
 const LORD_SCALE = 1.2
 const MOUNT_SCALE = 1.1
 
 InitFolders()
+GenerateTypescriptArmouryData("bretonnia_royal_armory", ["wh_main_brt_bretonnia"])
 GenerateXMLFromIds("bretonnia_royal_armoury")
 GenerateCampaignCharacterArtSetsTables("bretonnia_royal_armoury")
 GenerateUniforms("bretonnia_royal_armoury")
 GenerateCampaignCharacterArtsTables("bretonnia_royal_armory", SEED_NUMBER)
 GenerateVariantTables("bretonnia_royal_armoury", LORD_SCALE, MOUNT_SCALE)
 GenerateVariantMeshDefinitions()
-GenerateTypescriptArmouryData("bretonnia_royal_armory", ["wh_main_brt_bretonnia"])
 // const packFileName = "massif_lord_assets"
 // PackToFile(packFileName)
