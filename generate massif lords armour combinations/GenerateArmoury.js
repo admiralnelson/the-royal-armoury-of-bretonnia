@@ -628,7 +628,7 @@ function GenerateCombinations() {
                             if(result.indexOf(x) >= 0) continue
                             result.push(x)
                             counter++
-                            process.stdout.write(`\rProcessing: ${counter}. Pruned: ${totalPruned}           `)
+                            process.stdout.write(`\rProcessing ${face} ${armour} ${shield} ${weapon} ${cape} ${counter}. Pruned: ${totalPruned}           `)
                         }
                     }
                 }
@@ -643,8 +643,13 @@ function GenerateCombinations() {
     return result
 }
 
-const BASIC_IDS = GenerateBasicArmourySetIds()
-const COMBINATION_IDS = GenerateCombinations()
+let BASIC_IDS = null
+let COMBINATION_IDS = null
+
+function StartCsvCompiler() {
+    BASIC_IDS = GenerateBasicArmourySetIds()
+    COMBINATION_IDS = GenerateCombinations()
+}
 
 function GenerateXMLFromIds(xmlname) {
     const basicIds = BASIC_IDS
@@ -945,6 +950,7 @@ function GenerateVariantMeshDefinitions() {
 }
 
 function GenerateTypescriptArmouryData(projectName, factions) {
+    console.log("compiling csv into typescript data")
 
     const subtypeAgentKeys = new Set(GetBasicArmourSet().AgentSubType)
 
@@ -1178,6 +1184,7 @@ const MOUNT_SCALE = 1.1
 
 InitFolders()
 GenerateTypescriptArmouryData("bretonnia_royal_armory", ["wh_main_brt_bretonnia"])
+StartCsvCompiler()
 GenerateXMLFromIds("bretonnia_royal_armoury")
 GenerateCampaignCharacterArtSetsTables("bretonnia_royal_armoury")
 GenerateUniforms("bretonnia_royal_armoury")
