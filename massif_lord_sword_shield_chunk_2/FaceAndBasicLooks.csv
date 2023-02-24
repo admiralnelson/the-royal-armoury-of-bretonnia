@@ -1,2 +1,2 @@
-AgentType,AgentSubType,Culture,FaceId,HelmetId,ArmourId,WeaponId,ShieldId,CapeId,Thumbnail,ThumbnailMask1,ThumbnailMask2
-general,admiralnelson_bret_lord_massif_sword_shield_agent_key,wh_main_brt_bretonnia,fml_8,hml_5,tml_5,m_sword,m_shield,NONE,UI/Portraits/Portholes/admiralnelson/bret_lord_massif_5.png,UI/Portraits/Portholes/admiralnelson/bret_lord_massif_5_mask1.png,UI/Portraits/Portholes/admiralnelson/bret_lord_massif_5_mask2.png
+AgentType,AgentSubType,Culture,FaceId,HelmetId,ArmourId,WeaponId,ShieldId,Thumbnail,ThumbnailMask1,ThumbnailMask2
+general,admiralnelson_bret_lord_massif_sword_shield_agent_key,wh_main_brt_bretonnia,fml_8,hml_5,tml_5,m_sword,m_shield,UI/Portraits/Portholes/admiralnelson/bret_lord_massif_5.png,UI/Portraits/Portholes/admiralnelson/bret_lord_massif_5_mask1.png,UI/Portraits/Portholes/admiralnelson/bret_lord_massif_5_mask2.png

@@ -300,32 +300,6 @@ function GetShields() {
     return result
 }
 
-function GetCapes() {
-    const basicArmourSet = GetBasicArmourSet()
-
-    const csv = fs.readFileSync(`${ProjectDir}/ListOfCapes.csv`, 'utf-8').replace(/\r/g, "")
-    
-    const lines = csv.split('\n')
-    const headers = lines[0].split(',')
-
-    const result = {};
-    headers.forEach(header => {
-        result[header] = []
-    })
-
-    for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',')
-        headers.forEach((header, index) => {
-            if(index > 0 && basicArmourSet[header].includes(values[index])) {
-                throw `${values[index]} should not be put in ListOfCapes.csv`
-            }
-            result[header].push(values[index])
-        })
-    }
-
-    return result
-}
-
 function GetSubtypeToArmours() {
     const data = GetArmours()
     const result = {}
@@ -386,21 +360,6 @@ function GetSubytpeToWeapons() {
     return result
 }
 
-function GetSubytpeToCapes() {
-    const data = GetCapes()
-    const result = {}
-    for (let i = 0; i < data.CapeId.length; i++) {
-        const AgentSubType = data.AgentSubType[i]
-        const value = data.CapeId[i]
-        if(AgentSubType == "") continue
-        if(result[AgentSubType] == undefined) {
-            result[AgentSubType] = []
-        }
-        result[AgentSubType].push(value)
-    }
-    return result
-}
-
 function GetConflictingAnciliaries() {
     
     const csv = fs.readFileSync(`${ProjectDir}/IncompatibleAnciliaries.csv`, 'utf-8').replace(/\r/g, "")
@@ -434,9 +393,8 @@ function GenerateBasicArmourySetIds() {
             ArmourId: data.ArmourId[i],
             WeaponId: data.WeaponId[i],
             ShieldId: data.ShieldId[i],
-            CapeId: data.CapeId[i]
         };
-        result.push(`ArmourySystem__${row.FaceId}__${row.HelmetId}__${row.ArmourId}__${row.WeaponId}__${row.ShieldId}__${row.CapeId}`);
+        result.push(`ArmourySystem__${row.FaceId}__${row.HelmetId}__${row.ArmourId}__${row.WeaponId}__${row.ShieldId}`);
     }
     return result
 }
@@ -456,8 +414,6 @@ function GenerateCombinations() {
     const weaponsAndSubtype = GetWeapons()
     const shields = GetShields().ShieldId.concat(basicSet.ShieldId)
     const shieldsAndSubtype = GetShields()
-    const capes = GetCapes().CapeId.concat(basicSet.CapeId)
-    const capesAndSubtype = GetCapes()
 
     const weaponCompatibleCache = {}
     function IsWeaponCompatible(faceId, weaponIdToSearch) {
@@ -573,33 +529,6 @@ function GenerateCombinations() {
         
     }
 
-    const capeCompatibleCache = {}
-    function IsCapeCompatible(faceId, capeIdToSearch) {
-        if(capeCompatibleCache[faceId] && capeCompatibleCache[faceId][capeIdToSearch]) 
-            return true
-        if(capeCompatibleCache[faceId] && capeCompatibleCache[faceId][capeIdToSearch] == false)
-            return false
-
-        if(capeIdToSearch == "NONE") return true
-        const faceIdx = basicSet.FaceId.indexOf(faceId)
-        const capeId = basicSet.CapeId[faceIdx]
-        if(capeIdToSearch == capeId) return true
-
-        const AgentSubType = basicSet.AgentSubType[faceIdx]
-        for (let i = 0; i < capesAndSubtype.AgentSubType.length; i++) {
-            const agentSubtypeCape = capesAndSubtype.AgentSubType[i]
-            const capeId = capesAndSubtype.CapeId[i]
-            if(agentSubtypeCape == AgentSubType && capeId == capeIdToSearch) {
-                capeCompatibleCache[faceId] = {}
-                capeCompatibleCache[faceId][capeIdToSearch] = true
-                return true
-            }
-        }
-        capeCompatibleCache[faceId] = {}
-        capeCompatibleCache[faceId][capeIdToSearch] = false
-        return false
-    }
-
     const result = []
     let totalPruned = 0
     let counter = 0
@@ -629,25 +558,16 @@ function GenerateCombinations() {
                             continue
                         }  
                         
-                        for(const cape of capes) {
-                            //check if face/subtype support shields (shield is not set to NONE in FaceAndBasicLooks.csv)
-                            const isSupportsShield = IsAgentSupportShield(face)
-                            if(!isSupportsShield) {
-                                shield = "NONE"
-                            }
-
-                            if(!IsCapeCompatible(face, cape)) {
-                                totalPruned++
-                                continue
-                            }
-
-                            const x = `ArmourySystem__${face}__${helmet}__${armour}__${weapon}__${shield}__${cape}`
-                            if(basicCombinations.indexOf(x) >= 0) continue
-                            if(result.indexOf(x) >= 0) continue
-                            result.push(x)
-                            counter++
-                            process.stdout.write(`\rProcessing ${counter}. Pruned: ${totalPruned} => ${face} ${helmet} ${armour} ${shield} ${weapon} ${cape}      `)
+                        const isSupportsShield = IsAgentSupportShield(face)
+                        if(!isSupportsShield) {
+                            shield = "NONE"
                         }
+                        const x = `ArmourySystem__${face}__${helmet}__${armour}__${weapon}__${shield}`
+                        if(basicCombinations.indexOf(x) >= 0) continue
+                        if(result.indexOf(x) >= 0) continue
+                        result.push(x)
+                        counter++
+                        process.stdout.write(`\rProcessing ${counter}. Pruned: ${totalPruned} => ${face} ${helmet} ${armour} ${shield} ${weapon}       `)
                     }
                 }
             }
@@ -655,7 +575,7 @@ function GenerateCombinations() {
     }
     
     console.log("")
-    const total = basicSet.FaceId.length * helmets.length * armours.length * weapons.length * shields.length * capes.length
+    const total = basicSet.FaceId.length * helmets.length * armours.length * weapons.length * shields.length
     console.log(`GenerateCombinations: pruned impossible path ${totalPruned} generated ${result.length} without prunning ${ total } reduction is ${ ((total - result.length) / total) * 100 } %`)
     console.timeEnd('GenerateCombinations')
     return result
@@ -893,7 +813,6 @@ function GenerateVariantMeshDefinitions() {
             ArmourId: split[3],
             WeaponId: split[4],
             ShieldId: split[5],
-            CapeId: split[6]
         }
         if(!AVAILABLE_ASSETS[components.FaceId]) {
             throw(`${components.FaceId} is not defined in AssetIdsToTheActualAssetFilename.csv`)
@@ -909,9 +828,6 @@ function GenerateVariantMeshDefinitions() {
         }
         if(!AVAILABLE_ASSETS[components.ShieldId]) {
             throw(`${components.ShieldId} is not defined in AssetIdsToTheActualAssetFilename.csv`)
-        }
-        if(!AVAILABLE_ASSETS[components.CapeId]) {
-            throw(`${components.CapeId} is not defined in AssetIdsToTheActualAssetFilename.csv`)
         }
 
         const twoHandedWeapon = (components.ShieldId == "NONE") ? AVAILABLE_ASSETS[components.WeaponId] : ""
@@ -932,7 +848,7 @@ function GenerateVariantMeshDefinitions() {
         <VARIANT_MESH model="${AVAILABLE_ASSETS[components.HelmetId]}" />
     </SLOT>
     <SLOT name="cape">
-        <VARIANT_MESH model="${AVAILABLE_ASSETS[components.CapeId]}"/>
+        
     </SLOT>
     <SLOT name="body" >
         <VARIANT_MESH model="${AVAILABLE_ASSETS[components.ArmourId]}">
@@ -984,7 +900,6 @@ function GenerateTypescriptArmouryData(projectName, factions) {
                 ArmourId: "${armourset.ArmourId[i]}",
                 WeaponId: "${armourset.WeaponId[i]}",
                 ShieldId: "${armourset.ShieldId[i]}",
-                CapeId: "${armourset.CapeId[i]}"
             },`
             generatedBasicSet += template
         }
@@ -1091,28 +1006,6 @@ function GenerateTypescriptArmouryData(projectName, factions) {
         return entries
     }
 
-    function RegisteredCapes() {
-        const subTypes = GetSubytpeToCapes()
-        let entries = ``
-        for (const subType in subTypes) {
-            for (const cape of subTypes[subType]) {
-                const anciliaryKeys = ASSET_IDS_TO_ANCILIARY_KEYS[cape]
-                if(anciliaryKeys.length == 0) {
-                    throw `AssetId ${cape} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
-                }
-                for(const anciliaryKey of anciliaryKeys) {
-                    const entry = `{
-                        anciliaryKey: "${anciliaryKey}",
-                        subtypeAgentKey: "${subType}",
-                        assetId: "${cape}"
-                    },`
-                    entries += entry
-                }
-            }
-        }
-        return entries
-    }
-
     function IncompatibleItems() {
         let entries = `//incompatible items\n\t`
         const incompatibleItems = AgentSubtypeToIncompatibleAnciliaryKey()
@@ -1143,7 +1036,6 @@ function GenerateTypescriptArmouryData(projectName, factions) {
     const generatedHelmets = RegisteredHelmets()
     const generatedWeapons = RegisteredWeapons()
     const generatedShields = RegisteredShields()
-    const generatedCapes   = RegisteredCapes()
     const incompatibleItems = IncompatibleItems()
     const conflictingItems = ConflictingItems()
     const currentDate = new Date()
@@ -1184,9 +1076,6 @@ namespace TheGrailLordsOfBretonnia {
     ])
     ArmourySystem.RegisterShield([
         ${generatedShields}
-    ])
-    ArmourySystem.RegisterCape([
-        ${generatedCapes}
     ])
 
     ${incompatibleItems}
