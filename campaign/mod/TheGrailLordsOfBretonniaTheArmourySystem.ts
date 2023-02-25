@@ -30,10 +30,10 @@ namespace TheGrailLordsOfBretonnia {
         const WhitelistedFactions: Set<string> = new Set<string>()
         const WhitelistedSubAgentKeys: Set<string> = new Set<string>()
 
-        const AnciliaryArmourKeys: Set<AnciliaryKeyToAssetId> = new Set<AnciliaryKeyToAssetId>()
-        const AnciliaryHelmetKeys: Set<AnciliaryKeyToAssetId> = new Set<AnciliaryKeyToAssetId>()
-        const AnciliaryWeaponKeys: Set<AnciliaryKeyToAssetId> = new Set<AnciliaryKeyToAssetId>()
-        const AnciliaryShieldKeys: Set<AnciliaryKeyToAssetId> = new Set<AnciliaryKeyToAssetId>()
+        const AnciliaryArmourKeys: AnciliaryKeyToAssetId[] = []
+        const AnciliaryHelmetKeys: AnciliaryKeyToAssetId[] = []
+        const AnciliaryWeaponKeys: AnciliaryKeyToAssetId[] = []
+        const AnciliaryShieldKeys: AnciliaryKeyToAssetId[] = []
 
 
         let IsRunning = false
@@ -78,26 +78,46 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         export function RegisterArmour(armourAncilliaryKeys: AnciliaryKeyToAssetId[]) {
+            const ancilaryArmourKeys = AnciliaryArmourKeys      
             for (const iterator of armourAncilliaryKeys) {
-                AnciliaryArmourKeys.add(iterator)
+                const foundExisting = ancilaryArmourKeys.findIndex( 
+                    armourKey => armourKey.anciliaryKey == iterator.anciliaryKey && 
+                                 armourKey.assetId == iterator.assetId &&
+                                 armourKey.subtypeAgentKey == iterator.subtypeAgentKey) >= 0
+                if(!foundExisting) AnciliaryArmourKeys.push(iterator)
             }
         }
 
         export function RegisterWeapon(weaponAncilliaryKeys: AnciliaryKeyToAssetId[]) {
+            const ancilaryWeaponKeys = AnciliaryWeaponKeys     
             for (const iterator of weaponAncilliaryKeys) {
-                AnciliaryWeaponKeys.add(iterator)
+                const foundExisting = ancilaryWeaponKeys.findIndex( 
+                    weaponKey => weaponKey.anciliaryKey == iterator.anciliaryKey && 
+                                 weaponKey.assetId == iterator.assetId &&
+                                 weaponKey.subtypeAgentKey == iterator.subtypeAgentKey) >= 0
+                if(!foundExisting) AnciliaryWeaponKeys.push(iterator)
             }
         }
 
         export function RegisterHelmet(helmetAncilliaryKeys: AnciliaryKeyToAssetId[]) {
+            const ancilaryHelmetKeys = AnciliaryHelmetKeys          
             for (const iterator of helmetAncilliaryKeys) {
-                AnciliaryHelmetKeys.add(iterator)
+                const foundExisting = ancilaryHelmetKeys.findIndex( 
+                    helmetKey => helmetKey.anciliaryKey == iterator.anciliaryKey && 
+                                 helmetKey.assetId == iterator.assetId &&
+                                 helmetKey.subtypeAgentKey == iterator.subtypeAgentKey) >= 0
+                if(!foundExisting) AnciliaryHelmetKeys.push(iterator)
             }
         }
 
         export function RegisterShield(shieldAncilliaryKeys: AnciliaryKeyToAssetId[]) {
+            const ancilaryShieldKeys = AnciliaryShieldKeys
             for (const iterator of shieldAncilliaryKeys) {
-                AnciliaryShieldKeys.add(iterator)
+                const foundExisting = ancilaryShieldKeys.findIndex( 
+                    shieldKey => shieldKey.anciliaryKey == iterator.anciliaryKey && 
+                                 shieldKey.assetId == iterator.assetId &&
+                                 shieldKey.subtypeAgentKey == iterator.subtypeAgentKey) >= 0
+                if(!foundExisting) AnciliaryShieldKeys.push(iterator)
             }
         }
 
@@ -442,7 +462,7 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         function GetArmourId(agentSubtype: string, anciliariesKeys: string[]): string | null {
-            const knownArmours = Array.from(AnciliaryArmourKeys)
+            const knownArmours = AnciliaryArmourKeys
             const armourId = knownArmours.find( knownArmour => anciliariesKeys.includes(knownArmour.anciliaryKey) && knownArmour.subtypeAgentKey == agentSubtype )
             
             if(!armourId) return null
@@ -450,7 +470,7 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         function GetHelmetId(agentSubtype: string, anciliariesKeys: string[]): string | null {
-            const knownHelmets = Array.from(AnciliaryHelmetKeys)
+            const knownHelmets = AnciliaryHelmetKeys
             const helmetId = knownHelmets.find( knownHelmet => anciliariesKeys.includes(knownHelmet.anciliaryKey) && knownHelmet.subtypeAgentKey == agentSubtype )
             
             if(!helmetId) return null
@@ -458,7 +478,7 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         function GetWeaponId(agentSubtype: string, anciliariesKeys: string[]): string | null {
-            const knownWeapons = Array.from(AnciliaryWeaponKeys)
+            const knownWeapons = AnciliaryWeaponKeys
             const weaponId = knownWeapons.find( knownWeapon => anciliariesKeys.includes(knownWeapon.anciliaryKey) && knownWeapon.subtypeAgentKey == agentSubtype )
             
             if(!weaponId) return null
@@ -466,7 +486,7 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         function GetShieldId(agentSubtype: string, anciliariesKeys: string[]): string | null {
-            const knownShields = Array.from(AnciliaryShieldKeys)
+            const knownShields = AnciliaryShieldKeys
             const shieldId = knownShields.find( knownShield => anciliariesKeys.includes(knownShield.anciliaryKey) && knownShield.subtypeAgentKey == agentSubtype )
             
             if(!shieldId) return null
@@ -624,7 +644,7 @@ namespace TheGrailLordsOfBretonnia {
             private UnequipDoubleItems() {
                 const anciliaries = this.AnciliaryKeys
 
-                const armourAnciliaries = Array.from(AnciliaryArmourKeys).filter( 
+                const armourAnciliaries = AnciliaryArmourKeys.filter( 
                     anciliaryArmour => anciliaries.includes(anciliaryArmour.anciliaryKey) && 
                                        anciliaryArmour.subtypeAgentKey == this.SubtypeKey )
                 if(armourAnciliaries.length > 1) {
@@ -636,7 +656,7 @@ namespace TheGrailLordsOfBretonnia {
                     }
                 }
 
-                const weaponAnciliaries = Array.from(AnciliaryWeaponKeys).filter( 
+                const weaponAnciliaries = AnciliaryWeaponKeys.filter( 
                     anciliaryWeapon => anciliaries.includes(anciliaryWeapon.anciliaryKey) && 
                                        anciliaryWeapon.subtypeAgentKey == this.SubtypeKey )
                 if(weaponAnciliaries.length > 1) {
@@ -648,7 +668,7 @@ namespace TheGrailLordsOfBretonnia {
                     }
                 }
 
-                const helmetAncilliaries = Array.from(AnciliaryHelmetKeys).filter( 
+                const helmetAncilliaries = AnciliaryHelmetKeys.filter( 
                     ancillaryHelmet => anciliaries.includes(ancillaryHelmet.anciliaryKey) && 
                                        ancillaryHelmet.subtypeAgentKey == this.SubtypeKey )
                 if(helmetAncilliaries.length > 1) {
@@ -660,7 +680,7 @@ namespace TheGrailLordsOfBretonnia {
                     }
                 }
 
-                const shieldAncilliaryKeys = Array.from(AnciliaryShieldKeys).filter( 
+                const shieldAncilliaryKeys = AnciliaryShieldKeys.filter( 
                     ancillaryShield => anciliaries.includes(ancillaryShield.anciliaryKey) && 
                                        ancillaryShield.subtypeAgentKey == this.SubtypeKey )
                 if(shieldAncilliaryKeys.length > 1) {
