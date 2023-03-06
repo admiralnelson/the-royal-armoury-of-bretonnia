@@ -1191,6 +1191,12 @@ This function can also reposition the camera, so it's best used on game creation
      * @param enviromentGroupFileName The file path of the battle environment file. E.g. "weather/battle/wh_day_clear_02.environment_group"
      */
     set_battle_lighting_env_override(enviromentGroupFileName?: string): void
+    /**
+     * Remove the first instance of the specified unit from the force commanded by the specified character.
+     * @param characterLookUp Character lookup string. For more information, see Character Lookups.
+     * @param unitKey Key of unit to remove, from the main_units table.
+     */
+    remove_unit_from_character(characterLookUp: string, unitKey: string): void
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */

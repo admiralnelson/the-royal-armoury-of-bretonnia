@@ -691,6 +691,16 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         /**
+         * Remove troops from this Lord
+         * @param mainUnitKey keys from main_units table
+         */
+        public RemoveTroops(mainUnitKey: string[]) {
+            for (const troop of mainUnitKey) {
+                cm.remove_unit_from_character(cm.char_lookup_str(this.GetInternalInterface()), troop)
+            }
+        }
+
+        /**
          * Kills this lord and his armies.  
          * WARNING: Methods of this object will be invalid!
          */
