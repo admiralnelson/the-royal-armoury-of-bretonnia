@@ -943,7 +943,7 @@ function GenerateTypescriptArmouryData(projectName, factions) {
         let entries = ``
         for (const subType in subTypes) {
             for (const helmet of subTypes[subType]) {
-                const anciliaryKeys = ASSET_IDS_TO_ANCILIARY_KEYS[helmet]
+                const anciliaryKeys = ASSET_IDS_TO_ANCILIARY_KEYS[helmet]                
                 if(anciliaryKeys.length == 0) {
                     throw `AssetId ${helmet} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
                 }
@@ -990,6 +990,9 @@ function GenerateTypescriptArmouryData(projectName, factions) {
         for (const subType in subTypes) {
             for (const shield of subTypes[subType]) {
                 const anciliaryKeys = ASSET_IDS_TO_ANCILIARY_KEYS[shield]
+                if(!anciliaryKeys) {
+                    throw `AssetId ${shield} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
+                }
                 if(anciliaryKeys.length == 0) {
                     throw `AssetId ${shield} is not defined in AssetIdsToTheActualAnciliaryKeys.csv`
                 }

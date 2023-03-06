@@ -197,6 +197,7 @@ InjectResourcesPack()
 PackGeneratedAssets(`massif_lord_2handed`)
 PackGeneratedAssets(`massif_lord_sword_shield_chunk_1`)
 PackGeneratedAssets(`massif_lord_sword_shield_chunk_2`)
+PackGeneratedAssets(`normal_lord_sword_shield_chunk_1`)
 
 
 
