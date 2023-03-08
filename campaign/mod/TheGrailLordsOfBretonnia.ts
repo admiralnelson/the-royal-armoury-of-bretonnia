@@ -95,6 +95,8 @@ namespace TheGrailLordsOfBretonnia {
             for (let i = 0; i < 5; i++) {
                 cm.spawn_character_to_pool("wh_main_brt_bretonnia", "", "", "", "", 18, true, "general", `admiralnelson_bret_lord_massif_agent_key`, false, "")                
                 cm.spawn_character_to_pool("wh_main_brt_bretonnia", "", "", "", "", 18, true, "general", `admiralnelson_bret_lord_massif_sword_shield_agent_key`, false, "")                
+                cm.spawn_character_to_pool("wh_main_brt_bretonnia", "", "", "", "", 18, true, "general", `admiralnelson_bret_lord_2handed_agent_key`, false, "")             
+
             }
 
         }
