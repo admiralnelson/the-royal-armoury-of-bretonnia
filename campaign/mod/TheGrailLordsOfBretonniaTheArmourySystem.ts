@@ -34,6 +34,7 @@ namespace TheGrailLordsOfBretonnia {
         const AnciliaryHelmetKeys: AnciliaryKeyToAssetId[] = []
         const AnciliaryWeaponKeys: AnciliaryKeyToAssetId[] = []
         const AnciliaryShieldKeys: AnciliaryKeyToAssetId[] = []
+        const AllowAncillaryOverlap: Set<string> = new Set<string>()
 
 
         let IsRunning = false
@@ -75,6 +76,12 @@ namespace TheGrailLordsOfBretonnia {
             if(basicSet.ShieldId == "") basicSet.ShieldId = "NONE"
             ThumbnailFilenamesToAssociatedBasicSet.set(thumbnail.toLowerCase(), basicSet)
             logger.Log(`Registering ${thumbnail} with value of ${JSON.stringify(basicSet)}`)
+        }
+
+        export function AllowOverlapAnciliaryKeys(ancillaryKeys: string[]) {
+            for (const ancillary of ancillaryKeys) {
+                AllowAncillaryOverlap.add(ancillary)
+            }
         }
 
         export function RegisterArmour(armourAncilliaryKeys: AnciliaryKeyToAssetId[]) {
@@ -544,7 +551,7 @@ namespace TheGrailLordsOfBretonnia {
 
         class ArmouredCharacter extends Character implements IArmouredCharacter {
 
-            private DoNotRemoveItemsWithKeywords = ["mount", "warhorse", "hippogrif", "pegasus"]
+            private DoNotRemoveItemsWithKeywords = ["mount", "warhorse", "hippogrif", "pegasus", "khaine"]
             private currentVariantMeshId = ""
             
             constructor(character: Character) {
@@ -646,7 +653,8 @@ namespace TheGrailLordsOfBretonnia {
 
                 const armourAnciliaries = AnciliaryArmourKeys.filter( 
                     anciliaryArmour => anciliaries.includes(anciliaryArmour.anciliaryKey) && 
-                                       anciliaryArmour.subtypeAgentKey == this.SubtypeKey )
+                                       anciliaryArmour.subtypeAgentKey == this.SubtypeKey &&
+                                       !AllowAncillaryOverlap.has(anciliaryArmour.anciliaryKey) )
                 if(armourAnciliaries.length > 1) {
                     const firstItem = armourAnciliaries[0]
                     for (const anciliary of armourAnciliaries) {
@@ -658,7 +666,8 @@ namespace TheGrailLordsOfBretonnia {
 
                 const weaponAnciliaries = AnciliaryWeaponKeys.filter( 
                     anciliaryWeapon => anciliaries.includes(anciliaryWeapon.anciliaryKey) && 
-                                       anciliaryWeapon.subtypeAgentKey == this.SubtypeKey )
+                                       anciliaryWeapon.subtypeAgentKey == this.SubtypeKey &&
+                                       !AllowAncillaryOverlap.has(anciliaryWeapon.anciliaryKey) )
                 if(weaponAnciliaries.length > 1) {
                     const firstItem = weaponAnciliaries[0]
                     for (const anciliary of weaponAnciliaries) {
@@ -670,7 +679,8 @@ namespace TheGrailLordsOfBretonnia {
 
                 const helmetAncilliaries = AnciliaryHelmetKeys.filter( 
                     ancillaryHelmet => anciliaries.includes(ancillaryHelmet.anciliaryKey) && 
-                                       ancillaryHelmet.subtypeAgentKey == this.SubtypeKey )
+                                       ancillaryHelmet.subtypeAgentKey == this.SubtypeKey &&
+                                       !AllowAncillaryOverlap.has(ancillaryHelmet.anciliaryKey) )
                 if(helmetAncilliaries.length > 1) {
                     const firstItem = helmetAncilliaries[0]
                     for (const anciliary of helmetAncilliaries) {
@@ -682,7 +692,8 @@ namespace TheGrailLordsOfBretonnia {
 
                 const shieldAncilliaryKeys = AnciliaryShieldKeys.filter( 
                     ancillaryShield => anciliaries.includes(ancillaryShield.anciliaryKey) && 
-                                       ancillaryShield.subtypeAgentKey == this.SubtypeKey )
+                                       ancillaryShield.subtypeAgentKey == this.SubtypeKey &&
+                                       !AllowAncillaryOverlap.has(ancillaryShield.anciliaryKey) )
                 if(shieldAncilliaryKeys.length > 1) {
                     const firstItem = shieldAncilliaryKeys[0]
                     for (const anciliary of shieldAncilliaryKeys) {

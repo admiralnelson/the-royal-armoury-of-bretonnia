@@ -17,7 +17,11 @@ const LordSize = (process.argv[6]) ? Number(process.argv[6]) : 1.2
 const MountSize = (process.argv[7]) ? Number(process.argv[7]) : 1.1
 if(LordSize == NaN) throw `invalid number specified for LordSize (arg nr. 4)`
 if(MountSize == NaN) throw `invalid number specified for MountSize (arg nr. 5)`
+const GenerateBasicSetOnly = process.argv[8] == "basic-only"
 
+if(GenerateBasicSetOnly) console.log(`This process will only generate basic set variant mesh only! but will still generate
+all variant mesh possible combinations in the typescript file.
+`)
 
 function ClearFolder() {
     try {
@@ -401,6 +405,8 @@ function GenerateBasicArmourySetIds() {
 
 
 function GenerateCombinations() {
+    if(GenerateBasicSetOnly) return []
+
     console.log(`Compiling csvs...`)
     console.time('GenerateCombinations')
     const basicSet = GetBasicArmourSet()
