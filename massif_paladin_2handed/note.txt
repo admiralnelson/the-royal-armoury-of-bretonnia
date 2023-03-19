@@ -1,0 +1,2 @@
+asset ID must kept short text to prevent path too long error! (maybe path is limited to 255?)
+make user unique IDs don't overlaps with existing id in campaign art sets tables!

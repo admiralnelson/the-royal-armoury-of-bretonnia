@@ -199,7 +199,13 @@ PackGeneratedAssets(`massif_lord_sword_shield_chunk_1`)
 PackGeneratedAssets(`massif_lord_sword_shield_chunk_2`)
 PackGeneratedAssets(`normal_lord_sword_shield_chunk_1`)
 PackGeneratedAssets(`normal_lord_greatsword_chunk_1`)
+
+PackGeneratedAssets(`massif_paladin_sword_shield_chunk_1`)
+PackGeneratedAssets(`massif_paladin_2handed`)
 PackGeneratedAssets(`normal_paladin_sword_shield_chunk_1`)
+PackGeneratedAssets(`normal_paladin_greatsword_chunk_1`)
+
+
 
 
 
