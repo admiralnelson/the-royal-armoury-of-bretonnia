@@ -72,34 +72,23 @@ namespace TheGrailLordsOfBretonnia {
             for (const item of anciliariesTest) {
                 faction.AddAnciliary(item, true)
             }
-            
-            new Lord({
-                factionKey: "wh_main_brt_bretonnia",
-                agentKey: "admiralnelson_bret_lord_massif_sword_shield_agent_key",
-                regionKey: faction.FactionLeader?.CurrentRegionKey,
-                lordCreatedCallback: (lord) => {
-                    // alert(`thumbnail path is : ${lord.ThumbnailFileName.toLowerCase()}`)
-                    // const fac = GetFactionByKey("wh_main_brt_bretonnia")
-                    // if(fac == null) return
 
-                    // let char = ""
-                    // for (const c of fac.Characters) {
-                    //     char = `${char}, ${c.LocalisedFullName}`
-                    // }
-                    // alert(char, () => {
-                    //     lord.ChangeModelAppearance(`admiralnelson_brt_generic_lord_massif_sword_shield_art_key_1`)
-                    // })
-                } 
-            })
+            const BretonnianFactionsKeys = [
+                "wh_main_brt_bretonnia",
+                "wh_main_brt_carcassonne", 
+                "wh_main_brt_bordeleaux", 
+                "wh2_dlc14_brt_chevaliers_de_lyonesse", 
+                "wh2_main_brt_knights_of_origo", 
+                "wh2_main_brt_knights_of_the_flame", 
+                "wh2_main_brt_thegans_crusaders", 
+                "wh3_dlc20_brt_march_of_couronne", 
+                "wh3_main_brt_aquitaine", 
+                "wh_main_brt_artois", 
+                "wh_main_brt_bastonne", 
+           ]
+        
+           ArmourySystem.RegisterFaction(BretonnianFactionsKeys)
 
-            for (let i = 0; i < 5; i++) {
-                cm.spawn_character_to_pool("wh_main_brt_bretonnia", "", "", "", "", 18, true, "general", `admiralnelson_bret_lord_massif_agent_key`, false, "")                
-                cm.spawn_character_to_pool("wh_main_brt_bretonnia", "", "", "", "", 18, true, "general", `admiralnelson_bret_lord_massif_sword_shield_agent_key`, false, "")                
-                cm.spawn_character_to_pool("wh_main_brt_bretonnia", "", "", "", "", 18, true, "general", `admiralnelson_bret_lord_2handed_agent_key`, false, "")             
-
-            }
-
-            
 
         }
 
