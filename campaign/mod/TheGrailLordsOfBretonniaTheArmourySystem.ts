@@ -184,6 +184,22 @@ namespace TheGrailLordsOfBretonnia {
             }
         }
 
+        function RemoveCqiFromArmourySystemData(cqis: number[]) {
+            if(ArmourySystemData == null) {
+                logger.LogError(`AddCqiToArmourySystemData: ArmourySystemData was null`)
+                throw(`AddCqiToArmourySystemData failed`)
+            }
+
+            for (const cqiNr of cqis) {
+                const index = ArmourySystemData.CqiToAssociatedBasicSet.findIndex( armouredCqi => armouredCqi.Cqi == cqiNr)
+                if(index >= 0) {
+                    ArmourySystemData.CqiToAssociatedBasicSet.splice(index, 1)
+                }
+            }
+
+            SaveData()
+        }
+
         function AddCqiToArmourySystemData(character: ArmouredCharacter, basicSet: BasicSet) {
             if(ArmourySystemData == null) {
                 logger.LogError(`AddCqiToArmourySystemData: ArmourySystemData was null`)
@@ -293,6 +309,8 @@ namespace TheGrailLordsOfBretonnia {
                 throw(`DeserialisedArmouredCharacter failed`)
             }
 
+            ArmouredCharacters.clear()
+
             for (const cqiAndBasicSet of ArmourySystemData.CqiToAssociatedBasicSet) {
                 const character = FindCharacter(cqiAndBasicSet.Cqi)
                 if(character == null) {
@@ -376,9 +394,16 @@ namespace TheGrailLordsOfBretonnia {
 
         function ApplyTheArmours() {
             const time = PerformanceCounterBegin()
+            const invalidCharacters = []
             for (const armouredCharacter of ArmouredCharacters) {
-                armouredCharacter.WearArmour()
-            }            
+                if(armouredCharacter.IsCharacterPhysicallyVisibleOnMap) {
+                    armouredCharacter.WearArmour()
+                } else {
+                    invalidCharacters.push(armouredCharacter.AssignedCqi)
+                }
+            }
+            RemoveCqiFromArmourySystemData(invalidCharacters)
+            logger.Log(`invalid CQIs: ${JSON.stringify(invalidCharacters)}`)            
             logger.Log(`ApplyTheArmours OK. Operation took ${PerformanceCounterEnd() - time} ms`)
         }
 
@@ -553,12 +578,25 @@ namespace TheGrailLordsOfBretonnia {
 
             private DoNotRemoveItemsWithKeywords = ["mount", "warhorse", "hippogrif", "pegasus", "khaine"]
             private currentVariantMeshId = ""
+            private Cqi = -1
             
             constructor(character: Character) {
                 super({
                     characterObject: character.GetInternalInterface()
                 })
                 this.DoNotRemoveItemsWithKeywords.concat(Object.values(DoNotRemoveItemsWithKeywords))
+                this.Cqi = this.CqiNo
+            }
+
+            get IsCharacterPhysicallyVisibleOnMap(): boolean {
+                return this.IsValid()
+            }
+
+            /**
+             * this CQI always exists even when the character becomes invalid
+             */
+            get AssignedCqi(): number {
+                return this.Cqi
             }
     
             get FaceId(): string {
