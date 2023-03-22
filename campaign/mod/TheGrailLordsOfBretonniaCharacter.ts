@@ -94,8 +94,7 @@ namespace TheGrailLordsOfBretonnia {
      * ICharacterScript wrapper. It allows you to query and manipulate your lords and heroes in OOP style rather than relying cm APIs
      */
     export class Character {
-        protected characterObj: ICharacterScript | null = null
-
+        protected CommanQueueNumberID = -1
         /**
          * Not recommended to instantiate this directly. Use `FindCharacter` or `WrapICharacterObjectToCharacter` function instead. 
          * Or use `Lord` or `Champion` class instead.
@@ -112,7 +111,7 @@ namespace TheGrailLordsOfBretonnia {
                     if(!options.suppressLog) CharacterLogger.LogError(`options.characterObject is a INullScript!`)
                     throw(`options.characterObject is a INullScript!`)
                 }
-                this.characterObj = options.characterObject
+                this.CommanQueueNumberID = options.characterObject.command_queue_index()
                 return
             }
             if(options.agentSubtypeKey) {
@@ -162,7 +161,7 @@ namespace TheGrailLordsOfBretonnia {
                     (context) => {
                         const theChar = context.character ? context.character() : null
                         if(theChar == null) return
-                        this.characterObj = theChar
+                        this.CommanQueueNumberID = theChar.command_queue_index()                        
                         clearInterval(throwErrorLatent)
                     }, 
                     false
@@ -242,8 +241,10 @@ namespace TheGrailLordsOfBretonnia {
         public get ThumbnailFileName(): string {
             const ccoFaction = cco(`CcoCampaignFaction`, this.FactionKey)
             if(ccoFaction == null) return ``
-            const characterListLength = ccoFaction.Call(`CharacterList.Size`) as number
-            for (let i = 0; i < characterListLength; i++) {
+            const characterListLength = ccoFaction.Call(`CharacterList.Size`)
+            if(characterListLength == null) return ``
+            const characterListLengthNum = characterListLength as number
+            for (let i = 0; i < characterListLengthNum; i++) {
                 const characterCqi = ccoFaction.Call(`CharacterList[${i}].CQI`) as number
                 if(characterCqi == this.CqiNo) {
                     return ccoFaction.Call(`CharacterList[${i}].PortraitPath`) as string
@@ -257,7 +258,7 @@ namespace TheGrailLordsOfBretonnia {
          * @param newLord 
          */
         public SetInternalInterface(newLord: ICharacterScript) {
-            this.characterObj = newLord
+            this.CommanQueueNumberID = newLord.command_queue_index()
         }
 
         /**
@@ -266,15 +267,18 @@ namespace TheGrailLordsOfBretonnia {
          * @returns ICharacterScript
          */
         public GetInternalInterface(): ICharacterScript {
-            if(this.characterObj == null) {
-                CharacterLogger.LogError(`this.characterObj is null, maybe it was not created? check console logs`)
-                throw(`this.characterObj is null, maybe it was not created? check console logs`)
+            if(this.CommanQueueNumberID == -1) {
+                CharacterLogger.LogError(`this.CommanQueueNumberID is -1, maybe it was not created? check console logs`)
+                throw(`this.CommanQueueNumberID is -1, maybe it was not created? check console logs`)
             }
             if(!this.IsValid()) {
-                CharacterLogger.LogError(`this.characterObj is INullScript, maybe it was killed? check console logs`)
+                CharacterLogger.LogError(`this.CommanQueueNumberID is INullScript, maybe it was killed? check console logs`)
                 throw(`this.characterObj is INullScript, maybe it was killed? check console logs`)
             }
-            return this.characterObj           
+            if(cm.get_character_by_cqi(this.CommanQueueNumberID) != false)                
+                return cm.get_character_by_cqi(this.CommanQueueNumberID) as ICharacterScript       
+            else
+                throw `unreachable statement`
         }
 
         /** gets the faction that belongs to this character, wrapped in Faction object */
@@ -423,7 +427,7 @@ namespace TheGrailLordsOfBretonnia {
 
         /** (Getter) Command queue index number */
         public get CqiNo() : number {
-            return this.GetInternalInterface().command_queue_index()
+            return this.CommanQueueNumberID
         }
 
         /** (Getter) is the character in valid region? */
@@ -449,7 +453,7 @@ namespace TheGrailLordsOfBretonnia {
          * @returns 
          */
         public IsValid(): boolean {
-            return (this.characterObj != null) && !this.characterObj.is_null_interface()
+            return  cm.get_character_by_cqi(this.CqiNo) != false
         }
 
         /**
@@ -616,24 +620,24 @@ namespace TheGrailLordsOfBretonnia {
             }
             if(options.characterObject) {
                 super({})
-                this.characterObj = options.characterObject
+                this.CommanQueueNumberID = options.characterObject.command_queue_index()
                 if(options.characterObject.is_null_interface()) {
                     if(!options.suppressLog) CharacterLogger.LogError(`options.characterObject is a INullScript!`)
                     throw(`options.characterObject is a INullScript!`)
                 }
-                if(!cm.char_is_general(this.characterObj)) {
-                    if(!options.suppressLog) CharacterLogger.LogError(`the supplied character ${this.characterObj.character_subtype_key()} is not a type of "general"!`)
-                    throw(`the supplied character ${this.characterObj.character_subtype_key()} is not a type of "general"!`)
+                if(!cm.char_is_general(this.GetInternalInterface())) {
+                    if(!options.suppressLog) CharacterLogger.LogError(`the supplied character ${this.GetInternalInterface().character_subtype_key()} is not a type of "general"!`)
+                    throw(`the supplied character ${this.GetInternalInterface().character_subtype_key()} is not a type of "general"!`)
                 }
             }
             else if(options.cqi) {
                 super({})
                 const theChar = cm.get_character_by_cqi(options.cqi)
                 if(theChar) {                    
-                    this.characterObj = theChar
-                    if(!cm.char_is_general(this.characterObj)) {
-                        if(!options.suppressLog) CharacterLogger.LogError(`the supplied character ${this.characterObj.character_subtype_key()} is not a type of "general"!`)
-                        throw(`the supplied character ${this.characterObj.character_subtype_key()} is not a type of "general"!`)
+                    this.CommanQueueNumberID = theChar.command_queue_index()
+                    if(!cm.char_is_general(this.GetInternalInterface())) {
+                        if(!options.suppressLog) CharacterLogger.LogError(`the supplied character ${this.GetInternalInterface().character_subtype_key()} is not a type of "general"!`)
+                        throw(`the supplied character ${this.GetInternalInterface().character_subtype_key()} is not a type of "general"!`)
                     }
                 }
                 else {
@@ -651,7 +655,7 @@ namespace TheGrailLordsOfBretonnia {
                 })
             }
             this.lordCreatedCallback = options.lordCreatedCallback
-            if(this.characterObj) {
+            if(options.characterObject) {
                 if(this.lordCreatedCallback) this.lordCreatedCallback(this, "WrappingExistingObject")
             }
             
@@ -754,24 +758,24 @@ namespace TheGrailLordsOfBretonnia {
             }
             if(options.characterObject) {
                 super({})
-                this.characterObj = options.characterObject
+                this.CommanQueueNumberID = options.characterObject.command_queue_index()
                 if(options.characterObject.is_null_interface()) {
                     if(!options.suppressLog) CharacterLogger.LogError(`options.characterObject is a INullScript!`)
                     throw(`options.characterObject is a INullScript!`)
                 }
-                if(!cm.char_is_agent(this.characterObj)) {
-                    if(options.suppressLog) CharacterLogger.Log(`cannot wrap this character ${this.characterObj.character_subtype_key()} as it's not an agent, aborting`)
-                    throw(`cannot wrap this character ${this.characterObj.character_subtype_key()} as it's not an agent, aborting`)
+                if(!cm.char_is_agent(this.GetInternalInterface())) {
+                    if(options.suppressLog) CharacterLogger.Log(`cannot wrap this character ${this.GetInternalInterface().character_subtype_key()} as it's not an agent, aborting`)
+                    throw(`cannot wrap this character ${this.GetInternalInterface().character_subtype_key()} as it's not an agent, aborting`)
                 }
             }
             else if(options.cqi) {
                 super({})
                 const theChar = cm.get_character_by_cqi(options.cqi)
                 if(theChar) {
-                    this.characterObj = theChar 
-                    if(!cm.char_is_agent(this.characterObj)) {
-                        if(options.suppressLog) CharacterLogger.Log(`cannot wrap this character ${this.characterObj.character_subtype_key()} as it's not an agent, aborting`)
-                        throw(`cannot wrap this character ${this.characterObj.character_subtype_key()} as it's not an agent, aborting`)
+                    this.CommanQueueNumberID = theChar.command_queue_index() 
+                    if(!cm.char_is_agent(this.GetInternalInterface())) {
+                        if(options.suppressLog) CharacterLogger.Log(`cannot wrap this character ${this.GetInternalInterface().character_subtype_key()} as it's not an agent, aborting`)
+                        throw(`cannot wrap this character ${this.GetInternalInterface().character_subtype_key()} as it's not an agent, aborting`)
                     }
                 }else {
                     if(options.suppressLog) CharacterLogger.LogError(`this cqi ${options.cqi} is invalid cqi`)
@@ -793,7 +797,7 @@ namespace TheGrailLordsOfBretonnia {
                 })
             }
             this.championCreatedCallback = options.championCreatedCallback
-            if(this.characterObj) {
+            if(options.characterObject) {
                 if(this.championCreatedCallback) this.championCreatedCallback(this, "WrappingExistingObject")
             }
             
