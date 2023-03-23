@@ -99,6 +99,16 @@ interface IModelScript extends INullScript {
     has_effect_bundle(effectBundleKey: string): boolean
     /** Access campaign world interface */
     world(): IWorldScript
+    /**
+     * What is the local faction's difficulty level?
+     */
+    difficulty_level(): number
+    /**
+     * What is the combined difficulty level of all player factions?
+     */
+    combined_difficulty_level(): number
+    /** Is campaign multiplayer? */
+    is_multiplayer(): boolean
 }
 
 interface IRegionDataListScript extends INullScript {
@@ -630,12 +640,13 @@ interface ICharacterScript extends INullScript, ICharacterDetailsScript, IModelS
     post_battle_ancilary_chance(): number
     is_caster(): boolean
     is_visible_to_faction(): boolean
-    can_equip_ancillary(): boolean
+    can_equip_ancillary(ancillaryKey: string): boolean
     is_wounded(): boolean
     character_details(): ICharacterDetailsScript
     effect_bundles(): IEffectBundleListScript
 
     bonus_values(): IBonusValuesScript
+    post_battle_ancillary_chance(): number
 }
 
 interface IPooledResourceManager extends INullScript {
@@ -889,7 +900,7 @@ type CallbackCreateForce = {
     (cqi: number): void
 }
 
-interface ICcoScriptObject {
+interface ICommonGameAPI {
     /** retrive data or variable that stored in Scripted Object. contextCommand for example: ```ScriptObjectContext("peasant_count_wh_main_brt_bretonnia").NumericValue```. play around in context viewer window to test your queries
      * it will return null if it can't execute your query
      * you will also need to cast it like so ```common.get_context_value(`ScriptObjectContext("peasant_count_wh_main_brt_bretonnia").NumericValue`) as number```
@@ -899,6 +910,32 @@ interface ICcoScriptObject {
     call_context_command(this:void, contextQuery: string, ...args: any[]): void
     /** Retrieves a localised string from the database by its full localisation key. This is in the form `[table]_[field]_[record_key]`. If the lookup fails, an empty string is returned. */
     get_localised_string(localisationKey: string): string | ""
+
+     /**
+     * Potentially adds the supplied ancillary to the character in the supplied context. 
+     * When called, the function generates a random number between 0-100, and if this number is less than or equal to the supplied chance value, then the ancillary is added. 
+     * The character to add the ancillary to is specified in the supplied context object, which must be a context object created by a character event (e.g. CharacterCompletedBattle, CharacterCreated).
+     * This function is somewhat archaic and should only be used in exported ancillary scripts. 
+     * For general script usage `force_add_ancillary` is greatly preferred.     
+     * @param ancillaryKey 	Ancillary key, from the `ancillaries` table.
+     * @param chance Ancillary key, from the ancillaries table.
+     * @param context Context object, provided by a character event. 
+     */
+     ancillary(this: void, ancillaryKey: string, chance: number, context: IContext): void
+     /**
+      * Potentially adds the supplied trait points to the trait-recipient in the supplied context. 
+      * When called, the function generates a random number between 0-100, and if this number is less than or equal to the supplied chance value then the trait points are added. 
+      * The trait recipient is specified in the supplied context object, and the type of recipient must also be specified by a supplied string.
+      * This function is somewhat archaic and should only be used in exported trait scripts. 
+      * For adding traits to characters in general scripts `force_add_trait` is greatly preferred.
+      * @param traitKey Trait key, from the `traits` table.
+      * @param applicableToWhich Specifies the type of object to apply the trait to. Valid strings here are `agent` (for all characters), `region` and `unit`. Not all recipient types may currently be supported.
+      * @param numberOfTrait Number of trait points to add, if successful.
+      * @param chance Percentage chance that the trait will actually be added.
+      * @param context Context object, provided by an event.
+      */
+     ancillary(this: void, traitKey: string, applicableToWhich: string, numberOfTrait: number, chance: number, context: IContext): void
+ 
 }
 
 interface IGameInterface {
@@ -948,7 +985,7 @@ interface ICampaignManager {
     /** returns current turn number */
     turn_number(): number
     get_faction(factionKey: string, errorIfNotFound?: boolean): IFactionScript
-    /* Returns a character by it's command queue index. If no character with the supplied cqi is found then false is returned. */
+    /**  Returns a character by it's command queue index. If no character with the supplied cqi is found then false is returned. */
     get_character_by_cqi(cqiNo: number): ICharacterScript | false
     /**
      * 
@@ -1134,9 +1171,30 @@ This function can also reposition the camera, so it's best used on game creation
     get_family_member_by_cqi(cqiNumber: number): IFamilyMemberScript
     /**
      * Returns the number of defending armies in the cached pending battle.
-     * @returnds number of defending armies (forces you see in the campaign map)
+     * @returns number of defending armies (forces you see in the campaign map)
      */
     pending_battle_cache_num_defenders(): number
+    /**
+     * Returns records relating to a particular attacker in the cached pending battle. 
+     * The attacker is specified by numerical index, with the first being accessible at record 1. 
+     * This function returns the cqi of the commanding character, the cqi of the military force, and the faction name.
+     * To get records of the units related to an attacker, use `cm.pending_battle_cache_num_attacker_units` and `cm.pending_battle_cache_get_attacker_unit`.
+     * @param index starts from 1
+     * @returns number character cqi
+     * @returns number military force cqi
+     * @returns string faction name
+     */
+    pending_battle_cache_get_attacker(index: number): LuaMultiReturn<[ characterCqi: number, militaryForceCqi: number, factionKey: string ]>
+    /**
+     * Returns records relating to a particular defender in the cached pending battle. 
+     * The defender is specified by numerical index, with the first being accessible at record 1. 
+     * This function returns the cqi of the commanding character, the cqi of the military force, and the faction name.
+     * @param index starts from 1
+     * @returns number character cqi
+     * @returns number military force cqi
+     * @returns string faction name
+     */
+    pending_battle_cache_get_defender(index: number): LuaMultiReturn<[ characterCqi: number, militaryForceCqi: number, factionKey: string ]>
     /** Returns true if the supplied character is a general and has an army, false otherwise. 
      * This includes garrison commanders - to only return true if the army is mobile use `cm.char_is_mobile_general_with_army`
      * @character character
@@ -1197,6 +1255,12 @@ This function can also reposition the camera, so it's best used on game creation
      * @param unitKey Key of unit to remove, from the main_units table.
      */
     remove_unit_from_character(characterLookUp: string, unitKey: string): void
+
+    /**
+     * Returns true if the supplied character's army contains an embedded character that is a caster, false otherwise.
+     * @param character lord
+     */
+    general_has_caster_embedded_in_army(character: ICharacterScript): boolean
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */
@@ -1325,6 +1389,7 @@ interface IContext {
      * - TeleportationNetworkMoveCompleted
      * - TeleportationNetworkMoveStart
      * - TradeNodeConnected
+     * - TriggerPostBattleAncillaries
      */
     character?(): ICharacterScript
     /** This function is available for this following events:  
@@ -1389,10 +1454,18 @@ interface IContext {
      * - GarrisonResidenceEvent
      * - GarrisonResidenceExposedToFaction
      * - SettlementSelected
-     * 
+     * - TriggerPostBattleAncillaries
      */
     garrison_residence?(): IGarrisonResidenceScript
+    /** This function is available for this following events:  
+     * 
+     *  - TriggerPostBattleAncillaries
+     */
     pending_battle?(): IPendingBattleScript
+    /** This function is available for this following events:  
+     * 
+     * ?
+     */
     dilemma?(): string
     /** This function is available for this following events:  
      * 
@@ -1486,6 +1559,13 @@ interface IContext {
      *  - CharacterPerformsSettlementOccupationDecision
      */
     occupation_decision_type?(): string
+    
+    /**
+     *  This function is available for this following events:  
+     * 
+     *  - TriggerPostBattleAncillaries
+     */
+    has_stolen_ancillary?(): boolean
 }
 
 interface IRealTimer {
@@ -1536,8 +1616,9 @@ interface ICore {
 
 declare const cm: ICampaignManager
 declare const core: ICore
-declare const common: ICcoScriptObject
+declare const common: ICommonGameAPI
 declare const real_timer: IRealTimer
+
 
 interface IDebugger {
     enterDebugLoop(this: void, stackDepth: number, whatMessage: string): void
