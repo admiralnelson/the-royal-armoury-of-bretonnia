@@ -131,6 +131,19 @@ namespace TheGrailLordsOfBretonnia {
         return os.clock() * 1000
     }
 
+    export function GetCampaignDifficultyLocal(): number {
+        return cm.model().difficulty_level()
+    }
+
+    export function IsMultiplayer(): boolean {
+        return cm.model().is_multiplayer()
+    }
+    
+    export function LuaStringMatcher(input: string, pattern: string): string[] {
+        const matcher = string.gmatch(input, pattern)
+        return matcher()
+    }
+    
     class TimedCallback {
         private id = 0
         private interval = 0

@@ -448,6 +448,11 @@ namespace TheGrailLordsOfBretonnia {
             return this.GetInternalInterface().region().name()
         }
 
+        /** (getter) has this character won in recent battle? */
+        public get WasWinningBefore(): boolean {
+            return this.GetInternalInterface().won_battle()
+        }
+
         /**
          * Check if internally referenced character is not null and it is not INullScript
          * @returns 
@@ -702,6 +707,14 @@ namespace TheGrailLordsOfBretonnia {
             for (const troop of mainUnitKey) {
                 cm.remove_unit_from_character(cm.char_lookup_str(this.GetInternalInterface()), troop)
             }
+        }
+
+        /**
+         * (getter) returns true if Lord is a caster or he has a wizard hero in his army
+         */
+        public get HasCaster(): boolean {
+            return this.GetInternalInterface().is_caster() ||
+                   cm.general_has_caster_embedded_in_army(this.GetInternalInterface())
         }
 
         /**
