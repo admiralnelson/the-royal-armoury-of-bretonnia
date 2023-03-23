@@ -64,6 +64,14 @@ namespace TheGrailLordsOfBretonnia {
                 WhitelistedFactions.add(factionKey)
             }
         }
+
+        export function GetWhitelistedFactions(): string[] {
+            return Array.from(WhitelistedFactions)
+        }
+
+        export function IsThisAgentSubtypeRegistered(agentKey: string): boolean {
+            return WhitelistedSubAgentKeys.has(agentKey)
+        }
                 
         export function RegisterSubtypeAgent(agentKeys: string[]) {
             for (const agentKey of agentKeys) {
@@ -392,7 +400,7 @@ namespace TheGrailLordsOfBretonnia {
             return basicSet
         }
 
-        function ApplyTheArmours() {
+        export function ApplyTheArmours() {
             const time = PerformanceCounterBegin()
             const invalidCharacters = []
             for (const armouredCharacter of ArmouredCharacters) {
