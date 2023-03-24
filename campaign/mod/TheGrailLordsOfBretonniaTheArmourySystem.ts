@@ -55,6 +55,23 @@ namespace TheGrailLordsOfBretonnia {
 
         const LoadingTime = PerformanceCounterBegin()
 
+        export function ChangeThumbnail(character: Character, thumbnailPath: string) {
+            const armouredCharacter = FindArmouredCharacter(character)
+            if(armouredCharacter == null) {
+                console.warn(`cannot cast ${character.LocalisedFullName} to armouredCharacter`)
+                return false
+            }
+            const basicSet = ThumbnailFilenamesToAssociatedBasicSet.get(thumbnailPath)
+            if(basicSet == null) {
+                console.warn(`thumbnail is not registed ${thumbnailPath}`)
+                return false
+            }
+            
+            CqiReplaceArmourySystemData(armouredCharacter, basicSet)
+            ArmourySystem.ApplyTheArmours()
+            return true
+        } 
+
         export function CastToArmouredCharacter(character: Character): IArmouredCharacter | undefined {
             return FindArmouredCharacter(character)
         }
@@ -487,16 +504,16 @@ namespace TheGrailLordsOfBretonnia {
 
         function FindArmouredCharacterByCqi(cqi: number): ArmouredCharacter | undefined {
             if(ArmourySystemData == null) {
-                logger.LogError(`CastToArmouredCharacter: ArmourySystemData is null and not initialised`)
-                throw(`CastToArmouredCharacter failed`)
+                logger.LogError(`FindArmouredCharacterByCqi: ArmourySystemData is null and not initialised`)
+                throw(`FindArmouredCharacterByCqi failed`)
             }
             return Array.from(ArmouredCharacters).find(armouredCharacter => armouredCharacter.CqiNo == cqi)            
         }
 
         function FindArmouredCharacter(character: Character): ArmouredCharacter | undefined {
             if(ArmourySystemData == null) {
-                logger.LogError(`CastToArmouredCharacter: ArmourySystemData is null and not initialised`)
-                throw(`CastToArmouredCharacter failed`)
+                logger.LogError(`FindArmouredCharacter: ArmourySystemData is null and not initialised`)
+                throw(`FindArmouredCharacter failed`)
             }
             return Array.from(ArmouredCharacters).find(armouredCharacter => armouredCharacter.CqiNo == character.CqiNo)            
         }

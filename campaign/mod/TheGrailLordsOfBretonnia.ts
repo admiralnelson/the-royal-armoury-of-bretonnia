@@ -20,7 +20,7 @@ namespace TheGrailLordsOfBretonnia {
                 if(params.length != 2) return
 
                 const characterName = params[0].replaceAll(`"`, ``).trim()
-                const artSetId = params[1].replaceAll(`"`, ``).trim()
+                const thumbnailPath = params[1].replaceAll(`"`, ``).trim()
 
                 let character = null
                 const factionKeys = ArmourySystem.GetWhitelistedFactions()
@@ -47,8 +47,9 @@ namespace TheGrailLordsOfBretonnia {
                     return
                 }
 
-                character.ChangeModelAppearance(artSetId)
-                ArmourySystem.ApplyTheArmours()
+                if(!ArmourySystem.ChangeThumbnail(character, thumbnailPath)) {
+                    alert(`an error occured please see the console logs/stdo`)
+                }
             })
 
             ConsoleHandler.Register(`item%-spawner%-test "(.*)"`, params => {
