@@ -56,5 +56,15 @@ namespace TheGrailLordsOfBretonnia {
         "wh3_main_brt_aquitaine", 
         "wh_main_brt_artois", 
         "wh_main_brt_bastonne", 
+        "mixer_brt_montfort",
+        "mixer_brt_gisoreux",
+        "mixer_brt_quenelles",
+        "mixer_brt_languille",
+        "mixer_brt_brionne",
+        "mixer_brt_uprising",
+        "mixer_brt_peasantry",
+        "mixer_brt_bertrand",
+        "mixer_brt_brionne",
+        "mixer_brt_languille"
     ]
 }
