@@ -377,11 +377,11 @@ namespace TheGrailLordsOfBretonnia {
             for (const faction of factions) {
                 if(faction == null) {
                     logger.LogError(`FindAllCharacters: found null faction`)
-                    throw(`FindAllCharacters failed`)
-                }
-                const charactersInFaction = faction?.Characters.filter( character => WhitelistedSubAgentKeys.has(character.SubtypeKey) )
-                for (const character of charactersInFaction) {
-                    characters.push(character)
+                } else {
+                    const charactersInFaction = faction?.Characters.filter( character => WhitelistedSubAgentKeys.has(character.SubtypeKey) )
+                    for (const character of charactersInFaction) {
+                        characters.push(character)
+                    }
                 }
             }
 

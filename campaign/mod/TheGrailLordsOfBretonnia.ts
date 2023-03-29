@@ -6,8 +6,8 @@ namespace TheGrailLordsOfBretonnia {
 
         private Init(): void {
             console.log("Hello world, I'm compiled from Typescript project!")
-            ArmourySystem.Initialise()
             ArmourySystem.RegisterFaction(BretonnianFactions)
+            ArmourySystem.Initialise()
 
             ItemSpawner.Init()
             ItemSpawner.AddAnciliariesData(BretonnianAnciliaryData)
@@ -16,6 +16,20 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         private SetupConsoleDebug(): void {
+            ConsoleHandler.Register(`armoury%-force%-install "(.*)"`, (param) => {
+                if(param.length != 1) return
+
+
+            })
+
+            ConsoleHandler.Register(`armoury%-print%-factions`, () => {
+                const factions = ArmourySystem.GetWhitelistedFactions()
+                for (const iterator of factions) {
+                    console.log(iterator)
+                }
+                alert(`see stdout or console logs to see the result`)
+            })
+
             ConsoleHandler.Register(`armoury%-change%-thumbnail "(.*)" "(.*)"`, params => {
                 if(params.length != 2) return
 
