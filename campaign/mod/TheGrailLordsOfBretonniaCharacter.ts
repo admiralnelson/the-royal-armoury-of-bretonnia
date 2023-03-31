@@ -232,7 +232,8 @@ namespace TheGrailLordsOfBretonnia {
          * @param campaignArtSetKey art sed id from campaign_character_art_sets_tables table
          */
         public ChangeModelAppearance(campaignArtSetKey: string) {
-            cm.add_character_model_override(this.GetInternalInterface(), campaignArtSetKey)
+            //cm.add_character_model_override(this.GetInternalInterface(), campaignArtSetKey)
+            cm.add_unit_model_overrides(cm.char_lookup_str(this.CqiNo), campaignArtSetKey)
         }
 
         /**
@@ -324,6 +325,7 @@ namespace TheGrailLordsOfBretonnia {
             const ccoFaction = cco(`CcoCampaignFaction`, this.FactionKey)
             if(ccoFaction == null) return []
             const characterListLength = ccoFaction.Call(`CharacterList.Size`) as number
+            if(characterListLength == null) return []
             for (let i = 0; i < characterListLength; i++) {
                 const characterCqi = ccoFaction.Call(`CharacterList[${i}].CQI`) as number
                 if(characterCqi == this.CqiNo) {
@@ -458,7 +460,7 @@ namespace TheGrailLordsOfBretonnia {
          * @returns 
          */
         public IsValid(): boolean {
-            return  cm.get_character_by_cqi(this.CqiNo) != false
+            return  this.CqiNo != -1 && cm.get_character_by_cqi(this.CqiNo) != false
         }
 
         /**

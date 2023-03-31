@@ -1261,6 +1261,12 @@ This function can also reposition the camera, so it's best used on game creation
      * @param character lord
      */
     general_has_caster_embedded_in_army(character: ICharacterScript): boolean
+    /**
+     * Swap a model for a certain character. This needs to be set up at a new session.
+     * @param characterLookUp Character lookup string - see Character Lookups for more information.
+     * @param campaignArtSetKey Model key, from the campaign_character_art_sets database table.
+     */
+    add_unit_model_overrides(characterLookUp: string, campaignArtSetKey: string): void
 }
 
 /** context of the callback or conditional checks, get your faction, char, etc. from here */

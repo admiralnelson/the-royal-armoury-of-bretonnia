@@ -36,6 +36,7 @@ namespace TheGrailLordsOfBretonnia {
         const AnciliaryShieldKeys: AnciliaryKeyToAssetId[] = []
         const AllowAncillaryOverlap: Set<string> = new Set<string>()
 
+        let CharacterPanel: IUIComponent | null = null
 
         let IsRunning = false
 
@@ -262,6 +263,10 @@ namespace TheGrailLordsOfBretonnia {
                 DeserialiseArmouredCharacters()
                 ApplyTheArmours()
                 SetupOnCharacterChangeItem()
+                CharacterPanel = CommonUserInterface.Find(
+                    CommonUserInterface.GetRootUI(),
+                    `character_details_panel`,
+                )
 
                 OnTurnEnds()
                 OnAnciliaryGainedByCharacter()
@@ -418,7 +423,7 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         export function ApplyTheArmours() {
-            const time = PerformanceCounterBegin()
+            //const time = PerformanceCounterBegin()
             const invalidCharacters = []
             for (const armouredCharacter of ArmouredCharacters) {
                 if(armouredCharacter.IsCharacterPhysicallyVisibleOnMap) {
@@ -428,8 +433,8 @@ namespace TheGrailLordsOfBretonnia {
                 }
             }
             RemoveCqiFromArmourySystemData(invalidCharacters)
-            logger.Log(`invalid CQIs: ${JSON.stringify(invalidCharacters)}`)            
-            logger.Log(`ApplyTheArmours OK. Operation took ${PerformanceCounterEnd() - time} ms`)
+            //logger.Log(`invalid CQIs: ${JSON.stringify(invalidCharacters)}`)            
+            //logger.Log(`ApplyTheArmours OK. Operation took ${PerformanceCounterEnd() - time} ms`)
         }
 
         function SetupOnCharacterSpawnApplyArmourSystem() {
@@ -558,13 +563,8 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         function IsCharacterScreenBeingDisplayed(): boolean {
-            const characterPanel = CommonUserInterface.Find(
-                CommonUserInterface.GetRootUI(),
-                `character_details_panel`,
-            )
-
-            if(characterPanel == null) return false
-            return characterPanel.VisibleFromRoot()
+            if(CharacterPanel == null) return false
+            return CharacterPanel.VisibleFromRoot()
         }
 
         export interface IArmouredCharacter {
@@ -795,6 +795,7 @@ namespace TheGrailLordsOfBretonnia {
             }
     
             WearArmour() {        
+                logger.LogWarn(`Applying armour for: ${this.LocalisedFullName}`)
                 this.UnequipDoubleItems()        
                 const incompatibleItems = this.UnequipIncompatibleItems()
                 const conflictingItems = this.UnequipConflictingItems()
@@ -822,7 +823,7 @@ namespace TheGrailLordsOfBretonnia {
                     this.currentVariantMeshId = variantMeshId
                     this.ChangeModelAppearance(variantMeshId)
                     logger.LogWarn(`this character ${this.CqiNo} ${this.LocalisedFullName} will use ${variantMeshId}`)
-                    logger.LogWarn(`this character anciliaries ${JSON.stringify(this.AnciliaryKeys)}`)
+                    //logger.LogWarn(`this character anciliaries ${JSON.stringify(this.AnciliaryKeys)}`)
                 }
             }
     
