@@ -1620,6 +1620,16 @@ interface ICore {
     get_or_create_component(name: string,  filePath: string, parent?: IUIComponent): LuaMultiReturn<[createdUIComponent: IUIComponent, success: boolean]>    
 }
 
+declare const bit : {
+    band(this: void, a: number, b: number): number
+    bor(this: void, a: number, b: number): number
+    bxor(this: void, a: number, b: number): number
+    lshift(this: void, a: number, shiftBy: number): number
+    rshift(this: void, a: number, shiftBy: number): number
+    arshift(this: void, a: number, shiftBy: number): number
+    bnot(this: void, a: number): number
+}
+
 declare const cm: ICampaignManager
 declare const core: ICore
 declare const common: ICommonGameAPI
