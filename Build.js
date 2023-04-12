@@ -189,14 +189,15 @@ function InjectResourcesPack() {
     ], 
     { encoding: 'utf8', stdio: 'inherit' })
 
-    console.log(`injecting graphical assets`)
-    const result2 = spawnSync(`node.exe`,[
-        `UpdateAssets.js`
-    ], {
-        stdio: "inherit",
-        encoding: 'utf8'
-    })
-    if(result2.status != 0) throw `fail at injecting graphical assets`
+   // CAUSING TO CRASH ON NON DEV MACHINE?????? WHY???
+   // console.log(`injecting graphical assets`)
+   // const result2 = spawnSync(`node.exe`,[
+   //     `UpdateAssets.js`
+   // ], {
+   //     stdio: "inherit",
+   //     encoding: 'utf8'
+   // })
+   // if(result2.status != 0) throw `fail at injecting graphical assets`
 }
 
 //compile stage
