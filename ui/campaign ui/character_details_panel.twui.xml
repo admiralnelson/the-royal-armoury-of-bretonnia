@@ -1623,7 +1623,7 @@
 					<child_m_user_properties>
 						<property
 							name="is_draggable"
-							value="CharacterEquippedToContext != SelectedOrContainedCharacter &amp;&amp; SelectedOrContainedCharacter.CanEquipAncillary(this)"/>
+							value="false"/>
 						<property
 							name="mouse_event0"
 							value="lclick"/>
@@ -22630,7 +22630,7 @@
 				<callback_with_context
 					callback_id="ContextInteractiveSetter"
 					context_object_id="CcoCampaignCharacter"
-					context_function_id="CanUseArmoryItems"/>
+					context_function_id="CanUseArmoryItems==true || CanUseArmoryItems==false"/>
 			</callbackwithcontextlist>
 			<states>
 				<newstate

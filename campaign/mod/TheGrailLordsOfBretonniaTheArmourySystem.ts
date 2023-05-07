@@ -21,9 +21,10 @@ namespace TheGrailLordsOfBretonnia {
             BasicSet: BasicSet
         }
 
-
+        const UNIQUE_ID = Math.floor(Math.random() * 10000) + 1
         const VERSION = 1
         const SAVE_DATA_SLOT = "ADMIRALNELSON_ARMOURY_SYSTEM_DATA"
+        const RPC_REQUEST_EVENT_STRING = "ADM_ARMOURYSYNC"
 
         const logger = new Logger(`Admiralnelson ArmourySystem`)
 
@@ -249,6 +250,11 @@ namespace TheGrailLordsOfBretonnia {
                 if(!validate[0]) {
                     alert(`Some of the armoury data is not initalised! Reason: ${validate[1]}`)
                 } 
+                CharacterPanel = CommonUserInterface.Find(
+                    CommonUserInterface.GetRootUI(),
+                    `character_details_panel`,
+                )
+                logger.Log(`VALIDATION COMPLETED`)
             }, 300)
 
             InitialiseForTheFirstTime()
@@ -258,15 +264,12 @@ namespace TheGrailLordsOfBretonnia {
             }
 
             try {
+                SetupRemoteProcedureCalls()
                 SetupOnCharacterSpawnApplyArmourSystem()
                 InitialiseArmourySystemForCharacters()
                 DeserialiseArmouredCharacters()
                 ApplyTheArmours()
                 SetupOnCharacterChangeItem()
-                CharacterPanel = CommonUserInterface.Find(
-                    CommonUserInterface.GetRootUI(),
-                    `character_details_panel`,
-                )
 
                 OnTurnEnds()
                 OnAnciliaryGainedByCharacter()
@@ -422,6 +425,11 @@ namespace TheGrailLordsOfBretonnia {
             return basicSet
         }
 
+        function TriggerRPCRequest(): void {
+            logger.LogWarn(`TriggerRPCRequest() was triggered, broadcast except this machine UNIQUE_ID ${UNIQUE_ID}`)
+            CampaignUI.TriggerCampaignScriptEvent(UNIQUE_ID, RPC_REQUEST_EVENT_STRING)
+        }
+
         export function ApplyTheArmours() {
             //const time = PerformanceCounterBegin()
             const invalidCharacters = []
@@ -435,6 +443,31 @@ namespace TheGrailLordsOfBretonnia {
             RemoveCqiFromArmourySystemData(invalidCharacters)
             //logger.Log(`invalid CQIs: ${JSON.stringify(invalidCharacters)}`)            
             //logger.Log(`ApplyTheArmours OK. Operation took ${PerformanceCounterEnd() - time} ms`)
+        }
+
+        function SetupRemoteProcedureCalls() {
+            core.add_listener(
+                "remote procedure call on update peasant slot usage",
+                "UITrigger",
+                context => {
+                    if(context.trigger == null) return false
+                    if(context.faction_cqi == null) return false
+                    return context.trigger() == RPC_REQUEST_EVENT_STRING && context.faction_cqi() != UNIQUE_ID
+                },
+                () => {
+                    logger.LogWarn(`Remote Procedure call was triggered!`)
+                    if(IsCharacterScreenBeingDisplayed()) {
+                        CloseCharacterScreen()
+                        ApplyTheArmours()
+                        OpenCharacterScreen()
+                    } else {
+                        ApplyTheArmours()
+                    }
+                },
+                true
+            )
+
+            logger.Log(`SetupRemoteProcedureCalls ok`);
         }
 
         function SetupOnCharacterSpawnApplyArmourSystem() {
@@ -471,6 +504,7 @@ namespace TheGrailLordsOfBretonnia {
                     CloseCharacterScreen()
                     ApplyTheArmours()
                     OpenCharacterScreen()
+                    TriggerRPCRequest()
                 }, 100),
                 true
             )
@@ -501,6 +535,7 @@ namespace TheGrailLordsOfBretonnia {
                 true,
                 context => {
                     if(!IsCharacterScreenBeingDisplayed()) ApplyTheArmours()
+                    TriggerRPCRequest()
                 },
                 true
             )
@@ -563,7 +598,9 @@ namespace TheGrailLordsOfBretonnia {
         }
 
         function IsCharacterScreenBeingDisplayed(): boolean {
-            if(CharacterPanel == null) return false
+            if(CharacterPanel == null) {
+                return false
+            }
             return CharacterPanel.VisibleFromRoot()
         }
 

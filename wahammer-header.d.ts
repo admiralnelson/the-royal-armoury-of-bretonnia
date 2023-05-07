@@ -1286,6 +1286,12 @@ interface IContext {
     /**
      * This member is available for this following events:
      * 
+     * - UITrigger
+     */
+    faction_cqi?(): number
+    /**
+     * This member is available for this following events:
+     * 
      * - ComponentLClickUp
      */
     component?: IUIComponentAddress 
