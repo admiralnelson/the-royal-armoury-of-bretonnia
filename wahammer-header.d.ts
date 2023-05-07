@@ -921,7 +921,7 @@ interface ICommonGameAPI {
      * @param chance Ancillary key, from the ancillaries table.
      * @param context Context object, provided by a character event. 
      */
-     ancillary(this: void, ancillaryKey: string, chance: number, context: IContext): void
+    ancillary(this: void, ancillaryKey: string, chance: number, context: IContext): void
      /**
       * Potentially adds the supplied trait points to the trait-recipient in the supplied context. 
       * When called, the function generates a random number between 0-100, and if this number is less than or equal to the supplied chance value then the trait points are added. 
@@ -934,7 +934,12 @@ interface ICommonGameAPI {
       * @param chance Percentage chance that the trait will actually be added.
       * @param context Context object, provided by an event.
       */
-     ancillary(this: void, traitKey: string, applicableToWhich: string, numberOfTrait: number, chance: number, context: IContext): void
+    ancillary(this: void, traitKey: string, applicableToWhich: string, numberOfTrait: number, chance: number, context: IContext): void
+     /**
+      * Performs a VFS lookup of the supplied file and path, and returns whether the file exists in the virtual file system. The path should be specified from the working data folder.
+      * @param path Path from data/ in which to look.
+      */
+    vfs_exists(path: string): boolean
  
 }
 

@@ -143,6 +143,10 @@ namespace TheGrailLordsOfBretonnia {
         const matcher = string.gmatch(input, pattern)
         return matcher()
     }
+
+    export function IsFileExistVFS(filenameWithPath: string) {
+        return common.vfs_exists(filenameWithPath)
+    }
     
     class TimedCallback {
         private id = 0
