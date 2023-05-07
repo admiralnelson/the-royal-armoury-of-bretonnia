@@ -834,7 +834,7 @@ namespace TheGrailLordsOfBretonnia {
                 const weaponId = GetWeaponId(this.SubtypeKey, this.AnciliaryKeys) ?? this.BasicWeaponId
                 const shieldId = GetShieldId(this.SubtypeKey, this.AnciliaryKeys) ?? this.BasicShieldId
                 
-                return `ArmourySystem__${FaceId}__${helmetId}__${armourId}__${weaponId}__${shieldId}`
+                return `A.${FaceId}.${helmetId}.${armourId}.${weaponId}.${shieldId}`
             }
     
             CanUseShield(): boolean {
