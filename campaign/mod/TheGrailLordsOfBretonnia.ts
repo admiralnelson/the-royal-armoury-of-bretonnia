@@ -12,7 +12,22 @@ namespace TheGrailLordsOfBretonnia {
             ItemSpawner.Init()
             ItemSpawner.AddAnciliariesData(BretonnianAnciliaryData)
 
-            this.SetupConsoleDebug()
+            this.CheckIfAssetPackageIsLoaded()
+            this.CheckIfGenericLordPackageIsLoaded()
+            
+            this.SetupConsoleDebug()                        
+        }
+
+        private CheckIfGenericLordPackageIsLoaded(): void {
+            if(!IsFileExistVFS("script/campaign/mod/bretlordlogger.lua")) {
+                alert(`Missing dependency.\nRequired package: Bretonnia Generic Lord Pack.\n Visit: https://steamcommunity.com/sharedfiles/filedetails/?id=2867514081`)
+            }
+        }
+
+        private CheckIfAssetPackageIsLoaded(): void {
+            if(!IsFileExistVFS("variantmeshes/armour_sets/normal_admiralnelson_armour_1.rigid_model_v2")) {
+                alert(`Missing dependency.\nRequired package: The Royal Armoury of Bretonnia Assets Package.\n Visit: https://steamcommunity.com/sharedfiles/filedetails/?id=2961310304`)
+            }
         }
 
         private SetupConsoleDebug(): void {
