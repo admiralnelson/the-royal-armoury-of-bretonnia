@@ -1,2 +1,2 @@
-node.exe GenerateArmoury.js normal_paladin_greatsword_chunk_1 PaladinGreatSword_A 0xAAFA6607 wh_main_brt_bretonnia 1.2 1.1
+node.exe GenerateArmoury.js normal_paladin_greatsword_chunk_1 PaladinGreatSword_A 0x2ABA5ED wh_main_brt_bretonnia 1.2 1.1
 pause
