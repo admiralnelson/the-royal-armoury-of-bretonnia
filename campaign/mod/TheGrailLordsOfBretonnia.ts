@@ -14,6 +14,7 @@ namespace TheGrailLordsOfBretonnia {
 
             this.CheckIfAssetPackageIsLoaded()
             this.CheckIfGenericLordPackageIsLoaded()
+            this.CheckIfPaladinDataIsLoaded()
             
             this.SetupConsoleDebug()                        
         }
@@ -27,6 +28,12 @@ namespace TheGrailLordsOfBretonnia {
         private CheckIfAssetPackageIsLoaded(): void {
             if(!IsFileExistVFS("variantmeshes/armour_sets/normal_admiralnelson_armour_1.rigid_model_v2")) {
                 alert(`Missing dependency.\nRequired package: The Royal Armoury of Bretonnia Assets Package.\n Visit: https://steamcommunity.com/sharedfiles/filedetails/?id=2961310304`)
+            }
+        }
+
+        private CheckIfPaladinDataIsLoaded(): void {
+            if(!IsFileExistVFS("script/campaign/mod/genericpaladinspack.lua")) {
+                alert(`Missing dependency.\nRequired package: The Royal Armoury of Bretonnia Paladin Data Package.\n`)
             }
         }
 
